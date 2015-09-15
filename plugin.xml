@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+   <extension point = "org.eclipse.ui.commands">
+      <category 
+          name="Refactoring Category"
+          id="de.sepl.unifrankfurt.transformationlanguage.category">
+      </category>
+      <command
+          name="Transformation Language Command"
+          categoryId = "de.sepl.unifrankfurt.transformationlanguage.category"
+          id = "TransformationLanguage.commands.transLangCommand" >
+      </command>  
+   </extension>
+   <extension point = "org.eclipse.ui.handlers">
+      <handler 
+        commandId="TransformationLanguage.commands.transLangCommand"
+        class = "de.sepl.cs.unifrankfurt.transformationlanguage.transLangHandler">
+      </handler> 
+   </extension>
+   <extension point = "org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="popup:org.eclipse.cdt.ui.refactoring.menu">
+         <visibleWhen checkEnabled="false">
+            <with variable="activeWorkbenchWindow.activePerspective">
+                <equals value="org.eclipse.cdt.ui.CPerspective"/>
+            </with>
+         </visibleWhen>
+         <command
+               commandId="TransformationLanguage.commands.transLangCommand"
+               mnemonic="S"
+               id="TransformationLanguage.menus.transLangCommand">
+         </command>
+      </menuContribution>      
+   </extension>
+</plugin>
