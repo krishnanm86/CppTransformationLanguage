@@ -4,6 +4,12 @@ import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.commands.IHandler;
 import org.eclipse.core.commands.IHandlerListener;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.window.IShellProvider;
+import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IEditorPart;
+import org.eclipse.ui.handlers.HandlerUtil;
+import org.eclipse.ui.preferences.IWorkingCopyManager;
 
 public class transLangHandler implements IHandler {
 
@@ -21,8 +27,20 @@ public class transLangHandler implements IHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		// TODO Auto-generated method stub
+		IEditorPart editor = HandlerUtil.getActiveEditor(event);
+		ISelection selection = HandlerUtil.getCurrentSelection(event);
+		IShellProvider shellProvider = getShellProvider(event);
 		return null;
+	}
+
+	private IShellProvider getShellProvider(ExecutionEvent event) {
+		return new IShellProvider() {
+			@Override
+			public Shell getShell()
+			{
+				return HandlerUtil.getActiveShell(event);
+			}
+		};
 	}
 
 	@Override

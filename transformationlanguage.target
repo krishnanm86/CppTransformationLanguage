@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<?pde version="3.8"?><target name="transformationlanguage" sequenceNumber="1">
+<?pde version="3.8"?><target name="transformationlanguage" sequenceNumber="2">
 <locations>
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.platform.sdk" version="4.5.0.I20150603-2000"/>
@@ -8,6 +8,12 @@
 <location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
 <unit id="org.eclipse.cdt.sdk.feature.group" version="8.7.0.201506070905"/>
 <repository location="http://download.eclipse.org/releases/mars"/>
+</location>
+<location includeAllPlatforms="false" includeConfigurePhase="true" includeMode="planner" includeSource="true" type="InstallableUnit">
+<unit id="ch.hsr.ifs.cdttesting.tools.feature.feature.group" version="8.7.0.201506251222"/>
+<unit id="ch.hsr.ifs.cdttesting.example.feature.feature.group" version="8.7.0.201506251222"/>
+<unit id="ch.hsr.ifs.cdttesting.feature.feature.group" version="8.7.0.201506251222"/>
+<repository location="https://www.cevelop.com/cdt-testing/mars/"/>
 </location>
 </locations>
 </target>
