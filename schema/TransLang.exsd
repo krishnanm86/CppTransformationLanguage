@@ -3,7 +3,7 @@
 <schema targetNamespace="TransformationLanguage" xmlns="http://www.w3.org/2001/XMLSchema">
 <annotation>
       <appinfo>
-         <meta.schema plugin="TransformationLanguage" id="TransLang" name="Transformation Language Command"/>
+         <meta.schema plugin="TransformationLanguage" id="TransLang" name="C++ Transformation Language Command"/>
       </appinfo>
       <documentation>
          [Enter description of this extension point.]

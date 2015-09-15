@@ -7,7 +7,7 @@
           id="de.sepl.unifrankfurt.transformationlanguage.category">
       </category>
       <command
-          name="Transformation Language Command"
+          name="C++ Transformation Language Command"
           categoryId = "de.sepl.unifrankfurt.transformationlanguage.category"
           id = "TransformationLanguage.commands.transLangCommand" >
       </command>  

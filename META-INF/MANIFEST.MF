@@ -1,7 +1,7 @@
 Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
-Bundle-Name: TransformationLanguage
-Bundle-SymbolicName: TransformationLanguage;singleton:=true
+Bundle-Name: CPPTransformationLanguage
+Bundle-SymbolicName: CPPTransformationLanguage;singleton:=true
 Bundle-Version: 1.0.0.qualifier
 Bundle-Activator: de.sepl.cs.unifrankfurt.transformationlanguage.Activator
 Require-Bundle: org.eclipse.ui,
