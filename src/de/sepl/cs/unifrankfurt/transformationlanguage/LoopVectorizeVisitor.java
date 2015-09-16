@@ -39,7 +39,12 @@ public class LoopVectorizeVisitor extends ASTVisitor {
 				CPPASTForStatement replaceForStat = forStat.copy();
 				CPPASTLiteralExpression newLimitExpression = (CPPASTLiteralExpression) nodeFactory
 						.newLiteralExpression(CPPASTLiteralExpression.lk_integer_constant, "0");
-				LoopUtils.setNewLimit(replaceForStat, newLimitExpression);
+				try {
+					LoopUtils.setNewVCExprAsLimit(replaceForStat);
+				} catch (Exception e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
 				rewriter.replace(statement, replaceForStat, editGroup);
 			}
 		}
