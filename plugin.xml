@@ -16,21 +16,54 @@
       <handler 
         commandId="TransformationLanguage.commands.transLangCommand"
         class = "de.sepl.cs.unifrankfurt.transformationlanguage.transLangHandler">
+        <enabledWhen>
+	    	<with
+            variable="activeEditorId">
+            	<equals
+                   value="org.eclipse.cdt.ui.editor.CEditor">
+            	</equals>
+	    	</with>
+	    </enabledWhen>
       </handler> 
    </extension>
    <extension point = "org.eclipse.ui.menus">
+     	<menuContribution
+       		locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+       		<menu label="C++ Transformation LanguageMenu"
+       		mnemonic="M"
+       		id="de.sepl.unifrankfurt.transformationlanguage.translangmenu">
+       			<visibleWhen>
+       				<with variable="activeWorkbenchWindow.activePerspective">
+       					<equals value="org.eclipse.cdt.ui.CPerspective">
+       					</equals>
+       				</with>
+       			</visibleWhen>
+       			<command 	         		
+       				commandId="TransformationLanguage.commands.transLangCommand"
+	         		mnemonic="S"
+	         		id="TransformationLanguage.menus.transLangCommand">
+				</command>
+    		</menu>
+		</menuContribution>
       <menuContribution
             locationURI="popup:org.eclipse.cdt.ui.refactoring.menu">
-         <visibleWhen checkEnabled="false">
-            <with variable="activeWorkbenchWindow.activePerspective">
-                <equals value="org.eclipse.cdt.ui.CPerspective"/>
-            </with>
-         </visibleWhen>
          <command
                commandId="TransformationLanguage.commands.transLangCommand"
                mnemonic="S"
-               id="TransformationLanguage.menus.transLangCommand">
+               id="v">
          </command>
       </menuContribution>      
    </extension>
+     <extension
+        id="product"
+        point="org.eclipse.core.runtime.products">
+     <product
+         application = "applicationName"
+           name="C++ Transformation Language">
+        <property              
+              name="appName"
+              value="C++ Transformation Language">
+        </property>
+     </product>
+  </extension>
 </plugin>
