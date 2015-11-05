@@ -1,23 +1,21 @@
-namespace A: SCALAR === VC
+namespace
+A : SCALAR === VC
+{{
     #include <VC>
 
-    map VCTYPES(int:int_v, float:float_v);;
+    map VCTYPES("int":"int_v","float":"float_v",);;
     tag LOOP<id var>;;  // explicit tag
     tag LOOPTYPE<type var>;;   
     tag STRUCTTYPE<type var>;;
     tag VC_STRUCT;;
-        
-    type a[s] = SCALAR(type VCTYPES(a)[s/VCTYPES(a)::Size]){{
-       where a in VCTYPES.keys
-    }}
-    
-    type struct{STRUCTTYPE<ty>($BODY)}[s] ===  
-                    SCALAR(struct{VC_STRUCT($BODY)}[s/ty::size]);;   // Label A
+  
+    type struct{STRUCTTYPE<ty>(BODY)}[s] ===  
+                    SCALAR(struct{VC_STRUCT(BODY)}[s/ty::size]);;   // Label A
     
     VC_STRUCT{{    
 
       //Propagating the Structtype up the AST
-      decl a === SCALAR(STRUCTTYPE<VCTYPES(decltype(a)>(a)){{
+      decl a === SCALAR(STRUCTTYPE<VCTYPES(decltype(a))>(a)){{      
          where decltype(a) in VCTYPES.keys
       }}
         
@@ -26,19 +24,24 @@ namespace A: SCALAR === VC
       }}
     }}
 
-    stmt for(int i; i < limit; i++) LOOPTYPE<ty>($BODY)  === 
-       SCALAR(for(int i; i < limit / ty::Size; i++) LOOP<i>(VC($BODY)));;  \\Label B
+    stmt for(int i; i < limit; i++){break;} LOOPTYPE<ty>($BODY)  === 
+       SCALAR(for(int i; i < limit / ty::Size; i++){break;} LOOP<i>(VC($BODY)));;
+    
+     stmt break; LOOPTYPE<ty>($BODY)  === 
+       SCALAR(break; LOOP<i>(VC($BODY)));;     
 
     LOOP<i> {{  // tag dependency, passing the index of the loop down the AST        
     
         //Propagating the LoopType up the AST
-        expr a[i] === SCALAR(LOOPTYPE<VCTYPES(decltype(a)>(a[i])){{
+        //expr a[i] === SCALAR(LOOPTYPE<VCTYPES(decltype(a)>(a[i])){{
+        expr a[i] === SCALAR(LOOPTYPE<VCTYPES(decltype(a))>(a[i])){{
            where decltype(a) in VCTYPES.keys
         }}
      
-        decl a === SCALAR(VCTYPES(decltype(a)){{
+        decl a === SCALAR(VCTYPES(decltype(a))){{
            where decltype(a) in VCTYPES.keys
         }}     
         
         expr std::sqrt(x) === SCALAR(expr VC::sqrt(x));;
     }}
+  }}
