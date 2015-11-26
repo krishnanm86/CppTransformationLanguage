@@ -27,7 +27,6 @@ public class TTLUtils {
 							.getDeclSpecifier();
 					String declSpecifierName = memberSpecifier.toString().trim();
 					if (filter.containsKey(declSpecifierName)) {
-						System.out.println("Key Found");
 						CPPASTNamedTypeSpecifier newSpecifier = (CPPASTNamedTypeSpecifier) nodeFactory
 								.newTypedefNameSpecifier(
 										nodeFactory.newName(filter.get(declSpecifierName).toCharArray()));
