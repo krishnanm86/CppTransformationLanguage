@@ -2,14 +2,17 @@ package de.sepl.cs.unifrankfurt.transformationlanguage;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.cdt.core.dom.ast.ASTNodeFactoryFactory;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTExpression;
+import org.eclipse.cdt.core.dom.ast.IASTExpressionStatement;
 import org.eclipse.cdt.core.dom.ast.IASTLiteralExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
@@ -79,9 +82,9 @@ public class TTLUtils {
 		return newType;
 	}
 
-	public static Map<String, IASTNode> match(TTlExpression ttlPattern, TTlExpression ttlFragmentToMatch)
+	public static Map<String, List<IASTNode>> match(TTlExpression ttlPattern, TTlExpression ttlFragmentToMatch)
 			throws Exception {
-		Map<String, IASTNode> holeMap = new HashMap<String, IASTNode>();
+		Map<String, List<IASTNode>> holeMap = new HashMap<String, List<IASTNode>>();
 		IASTNode patternNode = null, matchNode = null;
 		switch (ttlPattern.type) {
 		case Declaration:
@@ -109,28 +112,100 @@ public class TTLUtils {
 		default:
 			break;
 		}
-		match(holeMap, patternNode, matchNode);
-		return holeMap;
+		if (match(holeMap, patternNode, matchNode))
+			return holeMap;
+		return new HashMap<String, List<IASTNode>>();
 	}
 
-	public static void printHoleMap(Map<String, IASTNode> holeMap) {
+	public static void printHoleMap(Map<String, List<IASTNode>> holeMap) {
 		for (String key : holeMap.keySet()) {
 			System.out.println("------------------");
 			System.out.println("Hole Id " + key);
-			ASTPrinter.print(holeMap.get(key));
+			for (IASTNode node : holeMap.get(key)) {
+				System.out.println("Node =======");
+				ASTPrinter.print(node);
+			}
 		}
 		System.out.println("------------------");
 	}
 
-	private static void match(Map<String, IASTNode> holeMap, IASTNode patternNode, IASTNode matchNode) {
-		if (isTTlHole(patternNode)) {
-			holeMap.put(getTTLHoleId(patternNode), matchNode);
-		} else if (isNodeEqual(patternNode, matchNode)
-				&& patternNode.getChildren().length == matchNode.getChildren().length) {
-			for (int i = 0; i < patternNode.getChildren().length; i++) {
-				match(holeMap, patternNode.getChildren()[i], matchNode.getChildren()[i]);
-			}
+	private static boolean match(Map<String, List<IASTNode>> holeMap, IASTNode patternNode, IASTNode matchNode) {
+		if (!isNodeEqual(patternNode, matchNode) || patternNode.getChildren().length > matchNode.getChildren().length) {
+			return false;
 		}
+		if (isNodeEqual(patternNode, matchNode)) {
+			int patternNodeChildIndex = 0, matchNodeChildIndex = 0;
+			while (patternNodeChildIndex != patternNode.getChildren().length) {
+				if (isTTlHole(patternNode.getChildren()[patternNodeChildIndex])) {
+					List<IASTNode> holeNodes = new ArrayList<IASTNode>();
+					holeNodes.add(matchNode.getChildren()[matchNodeChildIndex]);
+					matchNodeChildIndex++;
+					if (patternNodeChildIndex == patternNode.getChildren().length - 1) {
+						while (matchNodeChildIndex < matchNode.getChildren().length) {
+							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex]);
+							matchNodeChildIndex++;
+						}
+					}
+					patternNodeChildIndex++;
+					if (patternNodeChildIndex != patternNode.getChildren().length
+							&& matchNode.getChildren().length != matchNodeChildIndex) {
+						while (isNodeEqualsWithChildren(patternNode.getParent().getChildren()[patternNodeChildIndex],
+								matchNode.getParent().getChildren()[matchNodeChildIndex])) {
+							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex]);
+							matchNodeChildIndex++;
+						}
+					}
+					holeMap.put(getTTLHoleId(patternNode.getChildren()[patternNodeChildIndex - 1]), holeNodes);
+				} else {
+					if (match(holeMap, patternNode.getChildren()[patternNodeChildIndex],
+							matchNode.getChildren()[matchNodeChildIndex])) {
+						patternNodeChildIndex++;
+						matchNodeChildIndex++;
+					} else {
+						return false;
+					}
+				}
+			}
+
+		}
+		return true;
+		/*
+		 * if (isTTlHole(patternNode)) { holeMap.put(getTTLHoleId(patternNode),
+		 * matchNode); } else if (isNodeEqual(patternNode, matchNode) &&
+		 * patternNode.getChildren().length == matchNode.getChildren().length) {
+		 * for (int i = 0; i < patternNode.getChildren().length; i++) {
+		 * match(holeMap, patternNode.getChildren()[i],
+		 * matchNode.getChildren()[i]); } }
+		 */
+	}
+
+	private static boolean isNodeEqualsWithChildren(IASTNode iastNode, IASTNode iastNode2) {
+		Object[] patternNodeDetails = getNameTypeHashCode(iastNode);
+		Class<?> typePatternNode = (Class<?>) patternNodeDetails[0];
+		char[] qnamePatternNode = (char[]) patternNodeDetails[1];
+		String hash_code_PatternNode = String.valueOf(joinHashCodes(new int[] { getChildrenHashCode(iastNode),
+				Arrays.hashCode(qnamePatternNode), ((typePatternNode == null) ? 0 : typePatternNode.hashCode()) }));
+
+		Object[] matchNodeDetails = getNameTypeHashCode(iastNode2);
+		Class<?> typeMatchNode = (Class<?>) matchNodeDetails[0];
+		char[] qnameMatchNode = (char[]) matchNodeDetails[1];
+		String hash_code_MatchNode = String.valueOf(joinHashCodes(new int[] { getChildrenHashCode(iastNode2),
+				Arrays.hashCode(qnameMatchNode), ((typeMatchNode == null) ? 0 : typeMatchNode.hashCode()) }));
+
+		return hash_code_PatternNode.equals(hash_code_MatchNode);
+	}
+
+	private static int getChildrenHashCode(IASTNode node) {
+		int childrenHashCode = 0;
+		for (IASTNode ndChild : node.getChildren()) {
+			Object[] childNodeDetails = getNameTypeHashCode(ndChild);
+			Class<?> typeChildNode = (Class<?>) childNodeDetails[0];
+			char[] qnameChildNode = (char[]) childNodeDetails[1];
+			String hash_code_Child = String.valueOf(joinHashCodes(new int[] { Arrays.hashCode(qnameChildNode),
+					((typeChildNode == null) ? 0 : typeChildNode.hashCode()) }));
+			childrenHashCode = joinHashCodes(new int[] { childrenHashCode, Integer.valueOf(hash_code_Child) });
+		}
+		return childrenHashCode;
 	}
 
 	private static boolean isNodeEqual(IASTNode patternNode, IASTNode matchNode) {
@@ -150,17 +225,19 @@ public class TTLUtils {
 	}
 
 	private static String getTTLHoleId(IASTNode patternNode) {
-		String funcName = ((CPPASTIdExpression) ((CPPASTFunctionCallExpression) patternNode)
-				.getFunctionNameExpression()).getName().toString();
+		String funcName = ((CPPASTIdExpression) ((CPPASTFunctionCallExpression) ((IASTExpressionStatement) patternNode)
+				.getExpression()).getFunctionNameExpression()).getName().toString();
 		return funcName.substring(ttlHolePrefix.length(), funcName.length());
 
 	}
 
 	private static boolean isTTlHole(IASTNode patternNode) {
-		if (patternNode instanceof CPPASTFunctionCallExpression) {
-			if (((CPPASTIdExpression) ((CPPASTFunctionCallExpression) patternNode).getFunctionNameExpression())
-					.getName().toString().startsWith(ttlHolePrefix)) {
-				return true;
+		if (patternNode instanceof IASTExpressionStatement) {
+			if (((IASTExpressionStatement) patternNode).getExpression() instanceof CPPASTFunctionCallExpression) {
+				if (((CPPASTIdExpression) ((CPPASTFunctionCallExpression) ((IASTExpressionStatement) patternNode)
+						.getExpression()).getFunctionNameExpression()).getName().toString().startsWith(ttlHolePrefix)) {
+					return true;
+				}
 			}
 		}
 		return false;

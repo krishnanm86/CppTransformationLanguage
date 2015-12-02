@@ -5,10 +5,14 @@ import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 public class TTLTest {
 
 	public static void main(String[] args) throws Exception {
-		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {__ttla();}", NodeType.Statement);
-		TTlExpression ttlFragmentToMatch = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {fna();}",
+		/*TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {__ttla();fnd();__ttlc();}", NodeType.Statement);
+		TTlExpression ttlFragmentToMatch = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {fna();fnd(); fnc();fnx();}",
+				NodeType.Statement);
+		TTLUtils.printHoleMap(TTLUtils.match(ttlPattern, ttlFragmentToMatch));*/
+		
+		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {__ttla();fnd();}", NodeType.Statement);
+		TTlExpression ttlFragmentToMatch = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {fna();fnc();fnd();}",
 				NodeType.Statement);
 		TTLUtils.printHoleMap(TTLUtils.match(ttlPattern, ttlFragmentToMatch));
 	}
-
 }
