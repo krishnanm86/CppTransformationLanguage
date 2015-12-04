@@ -169,14 +169,6 @@ public class TTLUtils {
 
 		}
 		return true;
-		/*
-		 * if (isTTlHole(patternNode)) { holeMap.put(getTTLHoleId(patternNode),
-		 * matchNode); } else if (isNodeEqual(patternNode, matchNode) &&
-		 * patternNode.getChildren().length == matchNode.getChildren().length) {
-		 * for (int i = 0; i < patternNode.getChildren().length; i++) {
-		 * match(holeMap, patternNode.getChildren()[i],
-		 * matchNode.getChildren()[i]); } }
-		 */
 	}
 
 	private static boolean isNodeEqualsWithChildren(IASTNode iastNode, IASTNode iastNode2) {

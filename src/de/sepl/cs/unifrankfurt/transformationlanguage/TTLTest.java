@@ -10,8 +10,8 @@ public class TTLTest {
 				NodeType.Statement);
 		TTLUtils.printHoleMap(TTLUtils.match(ttlPattern, ttlFragmentToMatch));*/
 		
-		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {__ttla();fnd();}", NodeType.Statement);
-		TTlExpression ttlFragmentToMatch = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {fna();fnc();fnd();}",
+		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {__ttla();fnd();__ttlc();}", NodeType.Statement);
+		TTlExpression ttlFragmentToMatch = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {fna();fnc();fnd();holec();}",
 				NodeType.Statement);
 		TTLUtils.printHoleMap(TTLUtils.match(ttlPattern, ttlFragmentToMatch));
 	}
