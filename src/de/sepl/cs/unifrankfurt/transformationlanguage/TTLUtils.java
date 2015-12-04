@@ -5,8 +5,10 @@ import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.cdt.core.dom.ast.ASTNodeFactoryFactory;
@@ -86,35 +88,29 @@ public class TTLUtils {
 			throws Exception {
 		Map<String, List<IASTNode>> holeMap = new HashMap<String, List<IASTNode>>();
 		IASTNode patternNode = null, matchNode = null;
-		switch (ttlPattern.type) {
-		case Declaration:
-			patternNode = getDeclaration(ttlPattern.nodeWithHoles);
-			break;
-		case Expression:
-			patternNode = getExpression(ttlPattern.nodeWithHoles);
-			break;
-		case Statement:
-			patternNode = getStatement(ttlPattern.nodeWithHoles);
-			break;
-		default:
-			break;
-		}
-		switch (ttlFragmentToMatch.type) {
-		case Declaration:
-			matchNode = getDeclaration(ttlFragmentToMatch.nodeWithHoles);
-			break;
-		case Expression:
-			matchNode = getExpression(ttlFragmentToMatch.nodeWithHoles);
-			break;
-		case Statement:
-			matchNode = getStatement(ttlFragmentToMatch.nodeWithHoles);
-			break;
-		default:
-			break;
-		}
+		patternNode = getNodeFromString(ttlPattern.nodeWithHoles, ttlPattern.type);
+		matchNode = getNodeFromString(ttlFragmentToMatch.nodeWithHoles, ttlFragmentToMatch.type);
 		if (match(holeMap, patternNode, matchNode))
 			return holeMap;
 		return new HashMap<String, List<IASTNode>>();
+	}
+
+	public static IASTNode getNodeFromString(String node, TTlExpression.NodeType type) throws Exception {
+		IASTNode nodeToReturn = null;
+		switch (type) {
+		case Declaration:
+			nodeToReturn = getDeclaration(node);
+			break;
+		case Expression:
+			nodeToReturn = getExpression(node);
+			break;
+		case Statement:
+			nodeToReturn = getStatement(node);
+			break;
+		default:
+			break;
+		}
+		return nodeToReturn;
 	}
 
 	public static void printHoleMap(Map<String, List<IASTNode>> holeMap) {
@@ -169,6 +165,40 @@ public class TTLUtils {
 
 		}
 		return true;
+	}
+
+	public static IASTNode construct(Map<String, List<IASTNode>> holeMap, TTlExpression expr) throws Exception {
+		Set<String> holes = getHoles(expr.nodeWithHoles);
+		for (String hole : holes) {
+			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole, getNodeWithHoles(holeMap.get(hole)));
+		}
+		return getNodeFromString(expr.nodeWithHoles, expr.type);
+	}
+
+	private static CharSequence getNodeWithHoles(List<IASTNode> list) {
+		String str = "";
+		for (IASTNode node : list) {
+			str = str + node.getRawSignature();
+		}
+		return str;
+	}
+
+	private static Set<String> getHoles(String nodeWithHoles) {
+		Set<String> holes = new HashSet<String>();
+		int i = 0;
+		while (i < nodeWithHoles.length()) {
+			if (nodeWithHoles.substring(i).startsWith("__ttl")) {
+				String hole = "";
+				while (nodeWithHoles.charAt(i) == ';') {
+					hole = hole + nodeWithHoles.charAt(i);
+					i++;
+				}
+				holes.add(hole);
+				i++;
+			}
+			i++;
+		}
+		return null;
 	}
 
 	private static boolean isNodeEqualsWithChildren(IASTNode iastNode, IASTNode iastNode2) {
