@@ -172,7 +172,7 @@ public class TTLUtils {
 	public static IASTNode construct(Map<String, List<IASTNode>> holeMap, TTlExpression expr) throws Exception {
 		Set<String> holes = getHoles(expr.nodeWithHoles);
 		for (String hole : holes) {
-			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole+"()", getNodeWithHoles(holeMap.get(hole)));
+			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole+"();", getNodeWithHoles(holeMap.get(hole)));
 		}
 		System.out.println(expr.nodeWithHoles);
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
