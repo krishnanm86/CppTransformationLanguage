@@ -18,6 +18,7 @@ import org.eclipse.cdt.core.dom.ast.IASTExpressionStatement;
 import org.eclipse.cdt.core.dom.ast.IASTLiteralExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
+import org.eclipse.cdt.core.dom.ast.IASTNode.CopyStyle;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
@@ -50,6 +51,7 @@ import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.GNUCPPSourceParser;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.CPPVisitor;
+import org.eclipse.cdt.internal.core.dom.rewrite.astwriter.StatementWriter;
 import org.eclipse.cdt.internal.core.parser.scanner.CPreprocessor;
 
 @SuppressWarnings("restriction")
@@ -138,7 +140,7 @@ public class TTLUtils {
 					matchNodeChildIndex++;
 					if (patternNodeChildIndex == patternNode.getChildren().length - 1) {
 						while (matchNodeChildIndex < matchNode.getChildren().length) {
-							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex]);
+							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex].copy(CopyStyle.withLocations));
 							matchNodeChildIndex++;
 						}
 					}
@@ -147,7 +149,7 @@ public class TTLUtils {
 							&& matchNode.getChildren().length != matchNodeChildIndex) {
 						while (isNodeEqualsWithChildren(patternNode.getParent().getChildren()[patternNodeChildIndex],
 								matchNode.getParent().getChildren()[matchNodeChildIndex])) {
-							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex]);
+							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex].copy(CopyStyle.withLocations));
 							matchNodeChildIndex++;
 						}
 					}
@@ -170,8 +172,9 @@ public class TTLUtils {
 	public static IASTNode construct(Map<String, List<IASTNode>> holeMap, TTlExpression expr) throws Exception {
 		Set<String> holes = getHoles(expr.nodeWithHoles);
 		for (String hole : holes) {
-			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole, getNodeWithHoles(holeMap.get(hole)));
+			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole+"()", getNodeWithHoles(holeMap.get(hole)));
 		}
+		System.out.println(expr.nodeWithHoles);
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
 	}
 
@@ -189,7 +192,7 @@ public class TTLUtils {
 		while (i < nodeWithHoles.length()) {
 			if (nodeWithHoles.substring(i).startsWith("__ttl")) {
 				String hole = "";
-				while (nodeWithHoles.charAt(i) == ';') {
+				while (nodeWithHoles.charAt(i) != '(') {
 					hole = hole + nodeWithHoles.charAt(i);
 					i++;
 				}
@@ -198,7 +201,7 @@ public class TTLUtils {
 			}
 			i++;
 		}
-		return null;
+		return holes;
 	}
 
 	private static boolean isNodeEqualsWithChildren(IASTNode iastNode, IASTNode iastNode2) {
@@ -249,7 +252,7 @@ public class TTLUtils {
 	private static String getTTLHoleId(IASTNode patternNode) {
 		String funcName = ((CPPASTIdExpression) ((CPPASTFunctionCallExpression) ((IASTExpressionStatement) patternNode)
 				.getExpression()).getFunctionNameExpression()).getName().toString();
-		return funcName.substring(ttlHolePrefix.length(), funcName.length());
+		return funcName;
 
 	}
 
@@ -357,14 +360,14 @@ public class TTLUtils {
 		IASTTranslationUnit tu = parse(compilableStr);
 		CPPASTFunctionDefinition defn = (CPPASTFunctionDefinition) tu.getChildren()[0];
 		return ((CPPASTExpressionStatement) ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0])
-				.getExpression().copy();
+				.getExpression();
 	}
 
 	public static IASTStatement getStatement(String str) throws Exception {
 		String compilableStr = "void fn(){" + str + "}";
 		IASTTranslationUnit tu = parse(compilableStr);
 		CPPASTFunctionDefinition defn = (CPPASTFunctionDefinition) tu.getChildren()[0];
-		return ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0].copy();
+		return ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0];
 	}
 
 	public static IASTDeclaration getDeclaration(String str) throws Exception {
@@ -372,7 +375,7 @@ public class TTLUtils {
 		IASTTranslationUnit tu = parse(compilableStr);
 		CPPASTFunctionDefinition defn = (CPPASTFunctionDefinition) tu.getChildren()[0];
 		return ((CPPASTDeclarationStatement) ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0])
-				.getDeclaration().copy();
+				.getDeclaration();
 	}
 
 	public static IScanner createScanner(FileContent codeReader, ParserLanguage lang, ParserMode mode,
