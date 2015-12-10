@@ -54,10 +54,17 @@ import org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.CPPVisitor;
 import org.eclipse.cdt.internal.core.dom.rewrite.astwriter.StatementWriter;
 import org.eclipse.cdt.internal.core.parser.scanner.CPreprocessor;
 
+import de.sepl.cs.unifrankfurt.transformationlanguage.TTLUtils.TTLHoleType;
+
 @SuppressWarnings("restriction")
 public class TTLUtils {
 
+	public enum TTLHoleType {
+		Expression, Statement, NotHole;
+	}
+
 	private final static String ttlHolePrefix = "__ttl";
+	private final static String ttlHoleSuffix = "__";
 
 	private static ICPPNodeFactory nodeFactory = ASTNodeFactoryFactory.getDefaultCPPNodeFactory();
 
@@ -134,7 +141,7 @@ public class TTLUtils {
 		if (isNodeEqual(patternNode, matchNode)) {
 			int patternNodeChildIndex = 0, matchNodeChildIndex = 0;
 			while (patternNodeChildIndex != patternNode.getChildren().length) {
-				if (isTTlHole(patternNode.getChildren()[patternNodeChildIndex])) {
+				if (isTTlHole(patternNode.getChildren()[patternNodeChildIndex]) != TTLHoleType.NotHole) {
 					List<IASTNode> holeNodes = new ArrayList<IASTNode>();
 					holeNodes.add(matchNode.getChildren()[matchNodeChildIndex]);
 					matchNodeChildIndex++;
@@ -172,7 +179,7 @@ public class TTLUtils {
 	public static IASTNode construct(Map<String, List<IASTNode>> holeMap, TTlExpression expr) throws Exception {
 		Set<String> holes = getHoles(expr.nodeWithHoles);
 		for (String hole : holes) {
-			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole+"();", getNodeWithHoles(holeMap.get(hole)));
+			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole, getNodeWithHoles(holeMap.get(hole)));
 		}
 		System.out.println(expr.nodeWithHoles);
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
@@ -190,13 +197,14 @@ public class TTLUtils {
 		Set<String> holes = new HashSet<String>();
 		int i = 0;
 		while (i < nodeWithHoles.length()) {
-			if (nodeWithHoles.substring(i).startsWith("__ttl")) {
+			if (nodeWithHoles.substring(i).startsWith(ttlHolePrefix)) {
 				String hole = "";
-				while (nodeWithHoles.charAt(i) != '(') {
+				while (!nodeWithHoles.substring(i+1).startsWith(ttlHoleSuffix)) {
 					hole = hole + nodeWithHoles.charAt(i);
 					i++;
 				}
-				holes.add(hole);
+				hole = hole + nodeWithHoles.charAt(i);
+				holes.add(hole + ttlHoleSuffix);
 				i++;
 			}
 			i++;
@@ -250,22 +258,35 @@ public class TTLUtils {
 	}
 
 	private static String getTTLHoleId(IASTNode patternNode) {
-		String funcName = ((CPPASTIdExpression) ((CPPASTFunctionCallExpression) ((IASTExpressionStatement) patternNode)
-				.getExpression()).getFunctionNameExpression()).getName().toString();
-		return funcName;
-
+		if (patternNode instanceof CPPASTExpressionStatement) {
+			if (((CPPASTExpressionStatement) patternNode).getExpression() instanceof CPPASTIdExpression) {
+				return ((CPPASTIdExpression) ((CPPASTExpressionStatement) patternNode).getExpression()).getName()
+						.toString();
+			}
+		} else if (patternNode instanceof CPPASTIdExpression) {
+			return ((CPPASTIdExpression) patternNode).getName().toString();
+		}
+		return "notahole";
 	}
 
-	private static boolean isTTlHole(IASTNode patternNode) {
-		if (patternNode instanceof IASTExpressionStatement) {
-			if (((IASTExpressionStatement) patternNode).getExpression() instanceof CPPASTFunctionCallExpression) {
-				if (((CPPASTIdExpression) ((CPPASTFunctionCallExpression) ((IASTExpressionStatement) patternNode)
-						.getExpression()).getFunctionNameExpression()).getName().toString().startsWith(ttlHolePrefix)) {
-					return true;
+	private static TTLHoleType isTTlHole(IASTNode patternNode) {
+		// Either an ExpressionStatement with just an ID Expression with the
+		// name starting with the prefix
+		if (patternNode instanceof CPPASTExpressionStatement) {
+			if (((CPPASTExpressionStatement) patternNode).getExpression() instanceof CPPASTIdExpression) {
+				if (((CPPASTIdExpression) ((CPPASTExpressionStatement) patternNode).getExpression()).getName()
+						.toString().startsWith(ttlHolePrefix)) {
+					return TTLHoleType.Statement;
 				}
 			}
 		}
-		return false;
+		// Or simply an ID Expression with a name starting with the prefix
+		if (patternNode instanceof CPPASTIdExpression) {
+			if (((CPPASTIdExpression) patternNode).getName().toString().startsWith(ttlHolePrefix)) {
+				return TTLHoleType.Expression;
+			}
+		}
+		return TTLHoleType.NotHole;
 	}
 
 	public static Integer joinHashCodes(int[] hashcodes) {

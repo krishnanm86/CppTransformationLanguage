@@ -20,14 +20,18 @@ public class TTLTest {
 		 * NodeType.Statement); TTLUtils.printHoleMap(TTLUtils.match(ttlPattern,
 		 * ttlFragmentToMatch));
 		 */
-		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {__ttla();fnd();__ttlc();}",
+		
+		//ASTPrinter.print(TTLUtils.getStatement("for(int i = 0 ; i < 10; i++ ) {__ttla__; }"));
+		//ASTPrinter.print(TTLUtils.getExpression("a[__ttla__]"));
+	
+		 TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < 10; i++ ) {__ttla__; fnd(); __ttlc__; }",
 				NodeType.Statement);
 		TTlExpression ttlFragmentToMatch = new TTlExpression(
 				"for(int i = 0 ; i < 10; i++ ) {fna();fnc();fnd();holec();}", NodeType.Statement);
 		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
-		// TTLUtils.printHoleMap(holeMap);
+		TTLUtils.printHoleMap(holeMap);
 		TTlExpression ttlConstructExpression = new TTlExpression(
-				"for(int i = 0 ; i < 10; i++ ) {__ttla();__ttlc();fnd();}", NodeType.Statement);
+				"for(int i = 0 ; i < 10; i++ ) {__ttla__;  __ttlc__; fnd();}", NodeType.Statement);
 		ASTPrinter.print(TTLUtils.construct(holeMap, ttlConstructExpression));
 	}
 }
