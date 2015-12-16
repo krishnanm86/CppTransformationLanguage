@@ -31,7 +31,7 @@ public class TTLTest {
 		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 		TTLUtils.printHoleMap(holeMap);
 		TTlExpression ttlConstructExpression = new TTlExpression(
-				"for(int i = 0 ; i < 10; i++ ) {__ttla__;  __ttlc__; fnd();}", NodeType.Statement);
+				"while(x < 10) {__ttlc__; __ttla__; fnd();}", NodeType.Statement);
 		ASTPrinter.print(TTLUtils.construct(holeMap, ttlConstructExpression));
 	}
 }

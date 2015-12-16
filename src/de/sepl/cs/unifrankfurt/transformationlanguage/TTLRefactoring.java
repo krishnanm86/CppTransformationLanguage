@@ -25,9 +25,9 @@ public class TTLRefactoring extends CRefactoring {
 	public TTLRefactoring(ICElement element, ISelection selection, ICProject project) {
 		super(element, selection, project);
 		TTlExpression ttlFragmentToMatch = new TTlExpression(
-				"for(int i = 0 ; i < 10; i++ ) {__ttla();fnd();__ttlc();}", NodeType.Statement);
+				"for(int i = 0 ; i < 10; i++ ) {__ttla__;fnd();__ttlc__;}", NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(
-				"while(x < 10) {__ttlc();__ttla();fnd();}", NodeType.Statement);
+				"while(x < 10) {__ttlc__; __ttla__; fnd();}", NodeType.Statement);
 		ttlRule.put(ttlFragmentToMatch, ttlConstructExpression);
 	}
 
