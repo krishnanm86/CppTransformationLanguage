@@ -17,7 +17,7 @@ public class transLangRefactoringRunner extends RefactoringRunner {
 
 	@Override
 	public void run() {
-		TTLRefactoring refactoring = new TTLRefactoring(element, selection, project);
+		transLangRefactoring refactoring = new transLangRefactoring(element, selection, project);
 		transLangRefactoringWizard wizard = new transLangRefactoringWizard(refactoring);
 		run(wizard, refactoring, RefactoringSaveHelper.SAVE_REFACTORING);
 	}
