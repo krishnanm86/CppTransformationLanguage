@@ -10,11 +10,6 @@
 /ttlLexer.tokens
 /ttlListener.java
 /ttlParser.java
-/.gitignore
-/TTL.g4
-/TTLBaseListener.class
-/TTLLexer.class
-/TTLListener.class
 /TTLParser$AbstractdeclaratorContext.class
 /TTLParser$AbstractpackdeclaratorContext.class
 /TTLParser$AccessspecifierContext.class
@@ -233,8 +228,6 @@
 /TTLParser$VirtspecifierContext.class
 /TTLParser$VirtspecifierseqContext.class
 /TTLParser.class
-/de/
-/ttl.g4
 /ttlBaseListener.class
 /ttlLexer.class
 /ttlListener.class
@@ -252,3 +245,4 @@
 /ttlParser$TextContext.class
 /ttlParser$ZeroormoreContext.class
 /ttlParser.class
+/de/
