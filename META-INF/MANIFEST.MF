@@ -10,8 +10,7 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ltk.core.refactoring
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Import-Package: org.apache.commons.lang3.builder;version="3.1.0",
- org.apache.commons.logging;version="1.1.1",
+Import-Package: org.apache.commons.logging;version="1.1.1",
  org.eclipse.cdt.internal.ui.refactoring,
  org.eclipse.cdt.ui,
  org.eclipse.jface.text,
