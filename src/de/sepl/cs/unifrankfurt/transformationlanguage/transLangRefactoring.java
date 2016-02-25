@@ -12,6 +12,7 @@ import org.eclipse.cdt.core.model.ICElement;
 import org.eclipse.cdt.core.model.ICProject;
 import org.eclipse.cdt.core.parser.IParserLogService;
 import org.eclipse.cdt.core.parser.NullLogService;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTForStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
@@ -94,9 +95,11 @@ public class transLangRefactoring extends CRefactoring {
 				dependencies.add(use);
 			}
 		}
-		for (IASTName typeref : NameVisitor.getTyperefs()) {
-			dependencies.add(TransformationUtils.getDefns(typeref));
+		if (!(selectedNode instanceof CPPASTCompositeTypeSpecifier)) {
+			for (IASTName typeref : NameVisitor.getTyperefs()) {
+				dependencies.add(TransformationUtils.getDefns(typeref));
 
+			}
 		}
 		return dependencies;
 	}
@@ -104,7 +107,7 @@ public class transLangRefactoring extends CRefactoring {
 	private static void search(IASTNode selectedNode) {
 		workQueue.add(selectedNode);
 		if (ruleApplicable(selectedNode)) {
-			// apply rule
+			// apply rule on selectedNode
 			workQueue.remove(selectedNode);
 			workQueue.addAll(getDependencies(selectedNode));
 		} else {
@@ -112,7 +115,7 @@ public class transLangRefactoring extends CRefactoring {
 			// apply rule on enclosing node
 			for (IASTNode node : enclosingNode) {
 				workQueue.remove(node);
-				workQueue.addAll(getDependencies(node));
+				//workQueue.addAll(getDependencies(node));
 			}
 		}
 		if (!workQueue.isEmpty()) {
