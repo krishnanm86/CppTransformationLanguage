@@ -55,6 +55,7 @@ import org.eclipse.cdt.internal.core.dom.rewrite.astwriter.StatementWriter;
 import org.eclipse.cdt.internal.core.parser.scanner.CPreprocessor;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTLUtils.TTLHoleType;
+import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
 @SuppressWarnings("restriction")
 public class TTLUtils {
@@ -199,7 +200,7 @@ public class TTLUtils {
 		while (i < nodeWithHoles.length()) {
 			if (nodeWithHoles.substring(i).startsWith(ttlHolePrefix)) {
 				String hole = "";
-				while (!nodeWithHoles.substring(i+1).startsWith(ttlHoleSuffix)) {
+				while (!nodeWithHoles.substring(i + 1).startsWith(ttlHoleSuffix)) {
 					hole = hole + nodeWithHoles.charAt(i);
 					i++;
 				}
@@ -418,6 +419,19 @@ public class TTLUtils {
 		dummyMap.put("int", "int_v");
 		dummyMap.put("float", "float_v");
 		return dummyMap;
+	}
+
+	public static boolean checkType(NodeType type, IASTNode enclosingNode) {
+		if (type == NodeType.Statement) {
+			return enclosingNode instanceof IASTStatement;
+		}
+		if (type == NodeType.Declaration) {
+			return enclosingNode instanceof IASTDeclaration;
+		}
+		if (type == NodeType.Expression) {
+			return enclosingNode instanceof IASTExpression;
+		}
+		return false;
 	}
 
 }
