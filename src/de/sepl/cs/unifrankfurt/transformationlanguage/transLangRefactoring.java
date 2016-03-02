@@ -108,14 +108,16 @@ public class transLangRefactoring extends CRefactoring {
 			throws CoreException, OperationCanceledException {
 		ast = getAST(getTranslationUnit(), pm);
 		selectedNode = ast.getNodeSelector(null).findNode(selectedRegion.getOffset(), selectedRegion.getLength());
-		populateTempRules();
-		populateRules();
 		try {
-			workQueue.add(selectedNode);
-			search(selectedNode);
+			SearchAlgorithm.search(selectedNode, ast);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+		/*
+		 * populateTempRules(); populateRules(); try {
+		 * workQueue.add(selectedNode); search(selectedNode); } catch (Exception
+		 * e) { e.printStackTrace(); }
+		 */
 		return super.checkInitialConditions(pm);
 	}
 
