@@ -11,7 +11,7 @@ import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPVariable;
 @SuppressWarnings("restriction")
 public class NameVisitor extends ASTVisitor {
 
-	private static List<IASTName> objectrefs, typerefs;
+	private List<IASTName> objectrefs, typerefs, visitedNames;
 
 	public NameVisitor() {
 		objectrefs = new ArrayList<IASTName>();
@@ -21,29 +21,32 @@ public class NameVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTName name) {
-		if (name.getBinding() instanceof CPPClassType) {
-			typerefs.add(name);
-		}
-		if (name.getBinding() instanceof CPPVariable) {
-			objectrefs.add(name);
+		if (!visitedNames.contains(name)) {
+			if (name.getBinding() instanceof CPPClassType) {
+				typerefs.add(name);
+			}
+			if (name.getBinding() instanceof CPPVariable) {
+				objectrefs.add(name);
+			}
+			visitedNames.add(name);
 		}
 		return super.visit(name);
 	}
 
-	public static List<IASTName> getObjectrefs() {
+	public List<IASTName> getObjectrefs() {
 		return objectrefs;
 	}
 
-	public static void setObjectrefs(List<IASTName> objectrefs) {
-		NameVisitor.objectrefs = objectrefs;
+	public void setObjectrefs(List<IASTName> objectrefs) {
+		this.objectrefs = objectrefs;
 	}
 
-	public static List<IASTName> getTyperefs() {
+	public List<IASTName> getTyperefs() {
 		return typerefs;
 	}
 
-	public static void setTyperefs(List<IASTName> typerefs) {
-		NameVisitor.typerefs = typerefs;
+	public void setTyperefs(List<IASTName> typerefs) {
+		this.typerefs = typerefs;
 	}
 
 }

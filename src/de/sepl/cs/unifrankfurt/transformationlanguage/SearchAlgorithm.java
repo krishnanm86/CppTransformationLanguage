@@ -27,7 +27,7 @@ public class SearchAlgorithm {
 	private static Queue<IASTNode> workQueue = new LinkedList<IASTNode>();
 	private static NameVisitor visitor = new NameVisitor();
 	private static IASTTranslationUnit ast;
-	
+
 	private static void populateRules() throws Exception {
 		rules = new HashSet<TTlRule>();
 		TTlExpression ttlPattern = new TTlExpression(
@@ -94,12 +94,16 @@ public class SearchAlgorithm {
 	private static void workQueueBlock(TTlRule rule, List<IASTNode> selectedNodeAsList) {
 		if (applyRule(rule, selectedNodeAsList)) {
 			AppliedRules.put(selectedNodeAsList, rule);
-			
+			workQueue.addAll(getDependencies(selectedNodeAsList, true));
+			for (IASTNode selectedNode : selectedNodeAsList) {
+				workQueue.remove(selectedNode);
+			}
 		}
 	}
 
 	private static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) {
-		// TODO Auto-generated method stub
+		// TODO: Make rule apply properly and perform the transformation
+		System.out.println();
 		return false;
 	}
 
@@ -123,20 +127,22 @@ public class SearchAlgorithm {
 		}
 		return null;
 	}
-	
-	private static List<IASTNode> getDependencies(IASTNode selectedNode, boolean addDefns) {
-		List<IASTNode> dependencies = new ArrayList<IASTNode>();
-		selectedNode.accept(visitor);
-		for (IASTName objectref : NameVisitor.getObjectrefs()) {
-			for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
-				dependencies.add(use);
-			}
-		}
-		if (addDefns) {
-			if (!(selectedNode instanceof CPPASTCompositeTypeSpecifier)) {
-				for (IASTName typeref : NameVisitor.getTyperefs()) {
-					dependencies.add(TransformationUtils.getDefns(typeref));
 
+	private static List<IASTNode> getDependencies(List<IASTNode> selectedNodeAsList, boolean addDefns) {
+		List<IASTNode> dependencies = new ArrayList<IASTNode>();
+		for (IASTNode selectedNode : selectedNodeAsList) {
+			selectedNode.accept(visitor);
+			for (IASTName objectref : visitor.getObjectrefs()) {
+				for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
+					dependencies.add(use);
+				}
+			}
+			if (addDefns) {
+				if (!(selectedNode instanceof CPPASTCompositeTypeSpecifier)) {
+					for (IASTName typeref : visitor.getTyperefs()) {
+						dependencies.add(TransformationUtils.getDefns(typeref));
+
+					}
 				}
 			}
 		}
