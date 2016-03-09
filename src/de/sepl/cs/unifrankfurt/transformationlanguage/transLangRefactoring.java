@@ -121,7 +121,7 @@ public class transLangRefactoring extends CRefactoring {
 		return super.checkInitialConditions(pm);
 	}
 
-	private static List<IASTNode> getDependencies(IASTNode selectedNode, boolean addDefns) {
+	/*private static List<IASTNode> getDependencies(IASTNode selectedNode, boolean addDefns) {
 		List<IASTNode> dependencies = new ArrayList<IASTNode>();
 		selectedNode.accept(new NameVisitor());
 		for (IASTName objectref : NameVisitor.getObjectrefs()) {
@@ -139,7 +139,7 @@ public class transLangRefactoring extends CRefactoring {
 		}
 		return dependencies;
 	}
-
+*/
 	private static void search(IASTNode selectedNode) throws Exception {
 		touchedNodes.add(selectedNode);
 		if (ruleApplicable(selectedNode) != null) {
@@ -154,13 +154,13 @@ public class transLangRefactoring extends CRefactoring {
 			System.out.println(construct.getRawSignature());
 			workQueue.remove(selectedNode);
 			if (!touchedNodes.contains(selectedNode)) {
-				workQueue.addAll(getDependencies(selectedNode, true));
+				//workQueue.addAll(getDependencies(selectedNode, true));
 			}
 		} else {
 			List<IASTNode> enclosingNode = createEnclosingNode(selectedNode);
 			// apply rule on enclosing node
 			if (!touchedNodes.contains(selectedNode)) {
-				workQueue.addAll(getDependencies(selectedNode, false));
+				//workQueue.addAll(getDependencies(selectedNode, false));
 			}
 			for (IASTNode node : enclosingNode) {
 				workQueue.remove(node);

@@ -3,4 +3,18 @@
 \BOOKMARK [2][-]{subsection.2.1}{Using the GMP library to transform a single precision factorial into a multi precision factorial}{section.2}% 3
 \BOOKMARK [2][-]{subsection.2.2}{Introducing the VC API}{section.2}% 4
 \BOOKMARK [1][-]{section.3}{Features in the envisioned Language}{}% 5
-\BOOKMARK [1][-]{appendix.A}{Appendix Title}{}% 6
+\BOOKMARK [1][-]{section.4}{Informal Syntax and Semantics}{}% 6
+\BOOKMARK [2][-]{subsection.4.1}{Tag Declaration}{section.4}% 7
+\BOOKMARK [3][-]{subsubsection.4.1.1}{Syntax}{subsection.4.1}% 8
+\BOOKMARK [3][-]{subsubsection.4.1.2}{Semantics}{subsection.4.1}% 9
+\BOOKMARK [2][-]{subsection.4.2}{Namespace Declaration}{section.4}% 10
+\BOOKMARK [3][-]{subsubsection.4.2.1}{Syntax}{subsection.4.2}% 11
+\BOOKMARK [3][-]{subsubsection.4.2.2}{Semantics}{subsection.4.2}% 12
+\BOOKMARK [2][-]{subsection.4.3}{PMT Rule}{section.4}% 13
+\BOOKMARK [3][-]{subsubsection.4.3.1}{Syntax}{subsection.4.3}% 14
+\BOOKMARK [3][-]{subsubsection.4.3.2}{Semantics}{subsection.4.3}% 15
+\BOOKMARK [2][-]{subsection.4.4}{Scope Block}{section.4}% 16
+\BOOKMARK [3][-]{subsubsection.4.4.1}{Syntax}{subsection.4.4}% 17
+\BOOKMARK [3][-]{subsubsection.4.4.2}{Semantics}{subsection.4.4}% 18
+\BOOKMARK [2][-]{subsection.4.5}{General Semantics}{section.4}% 19
+\BOOKMARK [1][-]{appendix.A}{Appendix Title}{}% 20

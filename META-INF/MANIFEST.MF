@@ -10,8 +10,8 @@ Require-Bundle: org.eclipse.ui,
  org.eclipse.ltk.core.refactoring
 Bundle-RequiredExecutionEnvironment: JavaSE-1.8
 Bundle-ActivationPolicy: lazy
-Import-Package: org.apache.commons.lang3;version="3.1.0",
- org.apache.commons.lang3.builder;version="3.1.0",
+Import-Package: org.apache.commons.lang3,
+ org.apache.commons.lang3.builder,
  org.apache.commons.logging;version="1.1.1",
  org.eclipse.cdt.internal.ui.refactoring,
  org.eclipse.cdt.ui,
@@ -119,4 +119,7 @@ Bundle-ClassPath: org.eclipse.ptp_9.0.0.201506101404.jar,
  org.eclipse.ptp.ui_7.0.0.201506101404.jar,
  org.eclipse.ptp.ui.source_7.0.0.201506101404.jar,
  org.eclipse.ptp.utils_9.0.0.201506101404.jar,
- .
+ .,
+ commons-lang3-3.4.jar
+Export-Package: org.apache.commons.lang3,
+ org.apache.commons.lang3.builder

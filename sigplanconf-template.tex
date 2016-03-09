@@ -41,9 +41,9 @@
 \usepackage{pgf}
 \usetikzlibrary{backgrounds}
 \usetikzlibrary{patterns, arrows, shapes, arrows.new, decorations.markings, fit, matrix, decorations.pathmorphing}
-\tikzstyle{dflowarrow} = [very thick, double distance=1pt, > = triangle 45 new, arrow head=3mm]
+\tikzstyle{dflowarrow} = [very thick, double distance=1pt, \textgreater = triangle 45 new, arrow head=3mm]
 \tikzstyle{choicearrow} = [thick, arrow head=3mm]
-\tikzstyle{editarrow} = [thick, decorate, decoration=snake, > = triangle 45 new, arrow head=3mm]
+\tikzstyle{editarrow} = [thick, decorate, decoration=snake, \textgreater = triangle 45 new, arrow head=3mm]
 \definecolor{dblue}{rgb}{0.0,0.0,0.6}
 \usepackage{color}
 
@@ -71,8 +71,8 @@
 \newcommand{\types}{\ensuremath{:\hspace{-0.11cm}\Yright}}
 %\newcommand{\tags}{\ensuremath{}}
 
-\newcommand{\transto}{\texttt{==>}}
-\newcommand{\transfrom}{\texttt{<==}}
+\newcommand{\transto}{\texttt{==\textgreater}}
+\newcommand{\transfrom}{\texttt{\textless ==}}
 \newcommand{\bbegin}{\texttt{\{\{}}
 \newcommand{\bend}{\texttt{\}\}}}
 \newcommand{\lend}{\texttt{;;}}
@@ -161,7 +161,7 @@ numbers=none]
 int fact(int n){
   int i;
   int p = 1;
-  for (i=1; i <= n ; ++i){
+  for (i=1; i \textless = n ; ++i){
     p = p * i;
   }
   return p;
@@ -177,7 +177,7 @@ numbers=none]
   int i;
   mpz_t p;
   mpz_init_set_ui(p,1);
-  for (i=1; i <= n ; ++i){
+  for (i=1; i \textless = n ; ++i){
      mpz_mul_ui(p,p,i);
    }
    return p;
@@ -223,7 +223,7 @@ B bobj[1000];
 
 void fn()
 {
-   for(int i=0; i<1000; i++)
+   for(int i=0; i\textless 1000; i++)
    {
         float temp = aobj[i].x;
         bobj[i].y = std::sqrt(temp);
@@ -232,7 +232,7 @@ void fn()
 \end{lstlisting}
 };
 
-\node[text width=7.5cm] at (4, 0) (F2) {
+\node[text width=8.0cm] at (4, 0) (F2) {
 \begin{lstlisting}[ language = C++,
 frame=single,
 numbers=none]
@@ -250,7 +250,7 @@ Bv bobjv[1000/float_v::size];
 
 void fn()
 {
-   for(int i=0; i<1000/float_v::size; i++)
+   for(int i=0; i\textless 1000/float_v::size; i++)
    {
         float_v tempv = aobjv[i].xv;
         bobjv[i].yv = vc::sqrt(tempv);
@@ -333,7 +333,8 @@ tag type  vctype;;
 declaration struct $structname$ {$body$}[$s$] === 
           struct $structname$v {vc_struct($body$)}[$s$/(vc_struct,vctype)::size])
 
-//Block of rules to transform body of struct definition + updating the value of structtype- Block C
+/*Block of rules to transform body of struct definition + updating the value of structtype 
+                   - Block C*/
 scope  vc_struct{{   
   statement  int $a$; === {{vctype:=int_v}}  $a$v;
   statement  float $a$; === {{vctype:=float_v}}  $a$v; 
@@ -349,6 +350,130 @@ The block B is an example of an pattern match and rewriting rule. It matches a d
 
 The scope vc\_struct defines the rules that must be applied on each statement declaring a member type which is either an int or a float. It also populates the vc version of the type of the member declaration, if it matches with the existing value of vctype. This is referenced and used in the transformation of the size. The vc\_struct also transforms the member declarations into the new vc types. 
 
+\section{Informal Syntax and Semantics}
+Any specification in the language is any combination of :
+\begin{itemize}
+\item Tag declaration
+\item Namespace declaration
+\item PMT rule (Pattern, Match Transform)
+\item Scope Block
+\end{itemize}
+
+\subsection{Tag Declaration}
+
+
+\subsubsection{Syntax}
+
+\textbf{Tag \textless tagkind\textgreater  \textless tagname\textgreater;;}
+
+\begin{itemize}
+\item \textbf{Tag} is a keyword specifying that the statement that follows is a tag 
+declaration
+\item \textbf{Tagkind} specifies the kind of information that the corresponding tag can hold. This can be any C++ AST node type. For example, tagkind can be "type" or "stringliteral" or "binaryexpression" or "expression". A complete list of possible tagkinds will be available in the formal specifications.
+\item \textbf{Tagname} is an identifier, to permit referencing the tag for update, or for querying. Rules on what qualify as an identifier will be available in the formal specifications.
+
+\end{itemize}
+
+\subsubsection{Semantics}
+
+
+Tags are always updated inside scope blocks. Using the format
+\\
+\\
+\textbf{\textless tagname \textgreater := \textless value \textgreater} 
+\\
+\\
+where \textbf{Tagname} is an already declared tag
+and \textbf{Value} is a c++ code conforming with the type of the tag. 
+For example,  a tag of kind "type" cannot be updated with the value "x + y", which can be updated into a tag of kind "binaryexpression" or "expression".
+Tags are queried using the format 
+\\
+\\
+\textbf{\textless scopename \textgreater . \textless tagname \textgreater}
+\\
+\\
+where scopename is the name of an existing scope block.
+
+\subsection{Namespace Declaration}
+
+A namespace declaration declares the two domains, of transformation. Providing a name for the two sides of any PMT rule.
+
+\subsubsection{Syntax}
+
+\textbf{Namespace  \textless LDomain \textgreater  === \textless RDomain\textgreater;;}
+\begin{itemize}
+\item \textbf{Namespace} is the keyword specifying the line that follows declares two domains
+\item \textbf{LDomain} an identifier and associates all the left hand side code pattern of any PMT Rule  to LDomain.
+\item \textbf{RDomain} an identifier and associates all the right hand side code pattern of any PMT Rule  to RDomain.
+
+\end{itemize}
+
+\subsubsection{Semantics}
+
+A namespace declaration is always the beginning of any specification file.
+
+\subsection{PMT Rule}
+
+\subsubsection{Syntax}
+\textbf{\textless SyntacticClass\textgreater \textless LPMTExpression \textgreater === \textless RPMTExpression \textgreater}
+
+\begin{itemize}
+\item \textbf{SyntacticClass} indicates the type of code fragment being matched and transformed. This can be one of :
+\begin{itemize}
+\item Declaration
+\item Statement
+\item Expression
+\end{itemize}
+\item Both \textbf{LMPTExpression} and \textbf{RPMTExpressions} are \textbf{PMTExpressions}, which are explained here.
+\end{itemize}
+
+A \textbf{PMTExpression} is a C++ code fragment filled with one or more of the following :
+\begin{itemize}
+\item A \textbf{metaname}, enclosed with two \$ signs, for example 
+    	for(int \$i\$ = 0; \$i\$ \textless  \$limit\$ ; \$i\$++) { \$body\$} is a valid PMTExpression,              corresponding to the syntactic class, STATEMENT, with three metanames, (i, body and limit) . 
+\item A \textbf{tag query}, of the form \textbf{\textless scopename\textgreater.\textless tagname\textgreater}
+\item A \textbf{tag update} , of the form \textbf{{{ \textless tagname\textgreater := \textless value\textgreater }}}.  Tag updates can have an optional conditional of the form \textbf{{{where \textless condition\textgreater}}} , where condition is any c++ expression that evaluates to boolean and can use metanames whose values have been parsed as part of an LMPTExpression.If the condition cannot be evaluated, the tag update fails.
+
+Tag updates can also happen at the end of a PMTRule enclosed within {{ and }}. This indicates the updated value of the tag will not be used for the transformation, rather just to pass information. 
+\item A \textbf{scope usage}, of the form \textless scopename\textgreater(\textless metaname\textgreater) .
+
+\end{itemize}
+
+\subsubsection{Semantics}
+
+\begin{itemize}
+\item Tag query, scope usage and tag updates can only happen on RPMTExpressions.
+\item Tag updates can only happen inside PMTRules that are part of a scope block.
+
+\end{itemize}
+\subsection{Scope Block}
+\subsubsection{Syntax}
+
+\textbf{{{ \textless PMT Rule \textgreater* }}}
+\\ 
+\\
+A scope block is any set of PMTRules.
+\subsubsection{Semantics}
+
+A scope rule applies the PMTRules inside it only on the AST node comprising of the code fragment that is passed as an argument when using the scope
+
+\subsection{General Semantics}
+\begin{itemize}
+\item The initial inputs to tool are 
+\begin{itemize}
+\item A code location (declaration/ expression/ statement)
+\item Specification file comprising of Set of PMTRules, Scopes and tag declarations
+\end{itemize}
+\item Beginning with code location, all applicable rules are presented to the user and the user picks one.
+\item For an application of a PMTRule on a piece of code.
+\begin{itemize}
+\item The LPMTExpression(left hand side) is used to gather all the metanames and the corresponding code fragments that match
+\item If one metaname is used in multiple places, the code fragments must match, otherwise rule application is terminated.
+\item During the pass on the right hand side, all the scope rules are processed, from left to right. If the scopes transform the internals of the code fragment being passed as a parameter, the transformation is reflected.
+\item During application of the scope rules, if the value of the tags arent unique, then rule application is terminated
+\item After application of all the scope rules, the tags are used to complete the rest of the transformation.
+\end{itemize}
+\end{itemize}
 
 \appendix
 \section{Appendix Title}

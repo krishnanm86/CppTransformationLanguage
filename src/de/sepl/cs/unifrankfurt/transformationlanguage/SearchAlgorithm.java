@@ -52,13 +52,11 @@ public class SearchAlgorithm {
 		} else {
 			List<IASTNode> enclosingNode = getEnclosingNode(selectedNodeAsList);
 			TTlRule ruleForEnclosingNode = ruleApplicable(selectedNodeAsList);
-			if (ruleForEnclosingNode != null) {
-				workQueueBlock(ruleForEnclosingNode, enclosingNode);
-			}
+			workQueueBlock(ruleForEnclosingNode, enclosingNode);
 		}
 		if (!workQueue.isEmpty()) {
 			IASTNode unresolved = workQueue.remove();
-			search(unresolved, ast);
+			searchBlock(new ArrayList<IASTNode>(Arrays.asList(unresolved)));
 		}
 	}
 
@@ -92,24 +90,27 @@ public class SearchAlgorithm {
 	}
 
 	private static void workQueueBlock(TTlRule rule, List<IASTNode> selectedNodeAsList) {
-		if (applyRule(rule, selectedNodeAsList)) {
+		if (applyRule(rule, selectedNodeAsList) && rule != null) {
 			AppliedRules.put(selectedNodeAsList, rule);
-			workQueue.addAll(getDependencies(selectedNodeAsList, true));
-			for (IASTNode selectedNode : selectedNodeAsList) {
-				workQueue.remove(selectedNode);
-			}
+		}
+		workQueue.addAll(getDependencies(selectedNodeAsList, true));
+		for (IASTNode selectedNode : selectedNodeAsList) {
+			workQueue.remove(selectedNode);
 		}
 	}
 
 	private static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) {
 		// TODO: Make rule apply properly and perform the transformation
-		System.out.println();
+		System.out.println("applying rule to ");
+		for (IASTNode node : selectedNodeAsList) {
+			System.out.println(node.getRawSignature());
+		}
 		return false;
 	}
 
 	private static TTlRule ruleApplicable(List<IASTNode> selectedNodeAsList) throws Exception {
 		if (selectedNodeAsList.size() == 1) {
-			ruleApplicableSingleNode(selectedNodeAsList.get(0));
+			return ruleApplicableSingleNode(selectedNodeAsList.get(0));
 		} else {
 			// TODO: Handle the case when its a enclosing Node
 		}

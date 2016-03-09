@@ -17,6 +17,7 @@ public class NameVisitor extends ASTVisitor {
 		objectrefs = new ArrayList<IASTName>();
 		typerefs = new ArrayList<IASTName>();
 		shouldVisitNames = true;
+		visitedNames = new ArrayList<IASTName>();
 	}
 
 	@Override
