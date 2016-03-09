@@ -11,7 +11,8 @@ import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPVariable;
 @SuppressWarnings("restriction")
 public class NameVisitor extends ASTVisitor {
 
-	private List<IASTName> objectrefs, typerefs, visitedNames;
+	private List<IASTName> objectrefs, typerefs;
+	public List<IASTName> visitedNames;
 
 	public NameVisitor() {
 		objectrefs = new ArrayList<IASTName>();
@@ -22,14 +23,11 @@ public class NameVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTName name) {
-		if (!visitedNames.contains(name)) {
-			if (name.getBinding() instanceof CPPClassType) {
-				typerefs.add(name);
-			}
-			if (name.getBinding() instanceof CPPVariable) {
-				objectrefs.add(name);
-			}
-			visitedNames.add(name);
+		if (name.getBinding() instanceof CPPClassType) {
+			typerefs.add(name);
+		}
+		if (name.getBinding() instanceof CPPVariable) {
+			objectrefs.add(name);
 		}
 		return super.visit(name);
 	}

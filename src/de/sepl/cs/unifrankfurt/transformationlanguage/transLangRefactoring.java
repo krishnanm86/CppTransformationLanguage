@@ -48,7 +48,7 @@ public class transLangRefactoring extends CRefactoring {
 
 	private static void populateRules() {
 		TTlExpression ttlPattern = new TTlExpression(
-				"for(int _tti_ = 0 ; _ttli_ < _ttllimit_; _ttli_++ ) {__ttla__;  }", NodeType.Statement);
+				"for(int i = 0 ; _ttli_ < _ttllimit_; i++ ) {__ttla__;  }", NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(
 				"for(int _tti_ = 0 ; _ttli_ < _ttllimit_/float_v::size; _ttli_++ ) {__ttla__;  }", NodeType.Statement);
 		rules.put(ttlPattern, ttlConstructExpression);

@@ -30,8 +30,8 @@ public class SearchAlgorithm {
 
 	private static void populateRules() throws Exception {
 		rules = new HashSet<TTlRule>();
-		TTlExpression ttlPattern = new TTlExpression(
-				"for(int __tti__ = 0 ; __ttli__ < __ttllimit__; __ttli__++ ) {__ttla__;  }", NodeType.Statement);
+		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < __ttllimit__; __ttlx__++ ) {__ttla__;  }",
+				NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(
 				"for(int _tti_ = 0 ; _ttli_ < _ttllimit_/float_v::size; _ttli_++ ) {__ttla__;  }", NodeType.Statement);
 		rules.add(new TTlRule(ttlPattern, ttlConstructExpression, NodeType.Statement));
@@ -51,7 +51,7 @@ public class SearchAlgorithm {
 			workQueueBlock(rule, selectedNodeAsList);
 		} else {
 			List<IASTNode> enclosingNode = getEnclosingNode(selectedNodeAsList);
-			TTlRule ruleForEnclosingNode = ruleApplicable(selectedNodeAsList);
+			TTlRule ruleForEnclosingNode = ruleApplicable(enclosingNode);
 			workQueueBlock(ruleForEnclosingNode, enclosingNode);
 		}
 		if (!workQueue.isEmpty()) {
@@ -134,15 +134,20 @@ public class SearchAlgorithm {
 		for (IASTNode selectedNode : selectedNodeAsList) {
 			selectedNode.accept(visitor);
 			for (IASTName objectref : visitor.getObjectrefs()) {
-				for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
-					dependencies.add(use);
+				if (!visitor.visitedNames.contains(objectref)) {
+					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
+						dependencies.add(use);
+					}
+					visitor.visitedNames.add(objectref);
 				}
 			}
 			if (addDefns) {
 				if (!(selectedNode instanceof CPPASTCompositeTypeSpecifier)) {
 					for (IASTName typeref : visitor.getTyperefs()) {
-						dependencies.add(TransformationUtils.getDefns(typeref));
-
+						if (!visitor.visitedNames.contains(typeref)) {
+							dependencies.add(TransformationUtils.getDefns(typeref));
+							visitor.visitedNames.add(typeref);
+						}
 					}
 				}
 			}
