@@ -31,7 +31,7 @@ public class SearchAlgorithm {
 	private static void populateRules() throws Exception {
 		rules = new HashSet<TTlRule>();
 		TTlExpression ttlPattern = new TTlExpression(
-				"for(int _tti_ = 0 ; _ttli_ < _ttllimit_; _ttli_++ ) {__ttla__;  }", NodeType.Statement);
+				"for(int __tti__ = 0 ; __ttli__ < __ttllimit__; __ttli__++ ) {__ttla__;  }", NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(
 				"for(int _tti_ = 0 ; _ttli_ < _ttllimit_/float_v::size; _ttli_++ ) {__ttla__;  }", NodeType.Statement);
 		rules.add(new TTlRule(ttlPattern, ttlConstructExpression, NodeType.Statement));

@@ -13,8 +13,10 @@ import java.util.Set;
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.cdt.core.dom.ast.ASTNodeFactoryFactory;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
+import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTExpression;
 import org.eclipse.cdt.core.dom.ast.IASTExpressionStatement;
+import org.eclipse.cdt.core.dom.ast.IASTFunctionCallExpression;
 import org.eclipse.cdt.core.dom.ast.IASTLiteralExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
@@ -155,8 +157,8 @@ public class TTLUtils {
 					patternNodeChildIndex++;
 					if (patternNodeChildIndex != patternNode.getChildren().length
 							&& matchNode.getChildren().length != matchNodeChildIndex) {
-						while (isNodeEqualsWithChildren(patternNode.getParent().getChildren()[patternNodeChildIndex],
-								matchNode.getParent().getChildren()[matchNodeChildIndex])) {
+						while (!(isNodeEqualsWithChildren(patternNode.getChildren()[patternNodeChildIndex],
+								matchNode.getChildren()[matchNodeChildIndex]))) {
 							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex].copy(CopyStyle.withLocations));
 							matchNodeChildIndex++;
 						}
@@ -287,6 +289,11 @@ public class TTLUtils {
 				return TTLHoleType.Expression;
 			}
 		}
+		if (patternNode instanceof IASTDeclarator) {
+			if (((IASTDeclarator) patternNode).getName().toString().startsWith(ttlHolePrefix)) {
+				return TTLHoleType.Expression;
+			}
+		}
 		return TTLHoleType.NotHole;
 	}
 
@@ -350,7 +357,11 @@ public class TTLUtils {
 				}
 			}
 		}
-
+		if (node instanceof IASTExpressionStatement
+				&& ((IASTExpressionStatement) node).getExpression() instanceof IASTFunctionCallExpression) {
+			name = ((CPPASTIdExpression) ((IASTFunctionCallExpression) ((IASTExpressionStatement) node).getExpression())
+					.getFunctionNameExpression()).getName().toCharArray();
+		}
 		return new Object[] { node.getClass(), name };
 	}
 
