@@ -139,15 +139,20 @@ term1, term2
 keyword1, keyword2
 
 \section{Introduction}
-As source code evolves, large scale transformations are unavoidable. These can be a result of the need to introduce a new API, upgrade usages of existing API, perform code optimizations or simply do a code clean-up. Current support for such transformations come in the form of refactorings from Integrated Development environments, transformation languages or simply domain specific libraries. A scenario that occurs frequently during code evolution is migration of types, either to exploit enhanced capabilities as part of a library, or simply getting rid of a datatype that is hard to manage relative to the goals of the software. Examples of them include migrating from single precision numeric types to multiple precision types by introducing the GMP library, or explicitly vectorizing arrays and loops by introducing the VC library, or simply migrating usages of character pointer to strings. 
-                             Transformations of such nature are generally not simple cut and replace of method calls or declarations. They require non-linear tracking of dependencies, transforming code belonging to different kinds of syntactic classes and tracking information between transformations. Partially performing such transformations could potentially result in semantically and/or syntactically broken code. Consider the scenario of explicitly vectorizing a array of struct of floats using the VC API. The VC API provides a custom type called float\_v, which is a float vector, with capability to hold more than one float, depending on the hardware implementation. Transforming the array of struct of floats would involve transforming the individual members of the struct definition into float vectors, using the information about the member types to construct a new reduced size for the array and transforming all usages of the array object if possible. Similar problems of dependency tracking and propagating information across transformations exist even with the other examples we take motivation from. 
-              The existing refactorings in IDEs are limited by the fixed features of the environment and can only be triggered one at a time. For example, Eclipse supports a fixed set of refactorings like "Extract function" or "Rename method".  IDE refactorings do not support expressing pattern matching and rewriting of different syntactic classes. It would require the developer to write extensive scripts to even trigger multiple refactorings in a specific order.  Transformation languages like Stratego/XT and Coccinelle allow specifying transformation rules to express generic patterns matches and code transformations. Stratego/XT uses term rewriting and strategies to express the transformations. Strategies are simply combinations of term rewriting rules. Although Stratego/Xt is very powerful, it is limited when it comes to propagating information between rules, as is required when expressing the transformation of the array of structs in the VC example. Coccinelle allows elegant expression of code fragment rewriting in the form of diffs and permits propagating information between rules with rule parameters that can be updated within the rules and queried by other rules. But, Coccinelle does not support search through dependencies.
-              We propose to design a language that can be used to express pattern matching and rewriting rules in the form of term equivalences. We specify how rules can be written in the language and introduce features that can be used to express propagating information across rules. The user can trigger a tool by providing a starting point, which is a combination of a code location and a set of rules (specifications) written in the language. The tool would attempt to apply a rule or ask the user if multiple rules can be applied to the location. The tool would then look through the dependencies of the transformed code and suggest applicable rules for those code locations. The process continues till the all code dependencies are exhausted or if the user chooses to stop the application of rules. The motivation of such a language and complementary tool is as follows:
+As source code evolves, large scale transformations are unavoidable. These can be a result of the need to introduce a new API, upgrade usages of existing API, perform code optimizations or simply do a code clean-up. Current support for such transformations comes in the form of refactorings from Integrated Development environments, transformation languages or simply domain specific libraries.
+
+      A scenario that occurs frequently during code evolution is migration of types, either to exploit enhanced capabilities as part of a library, or simply getting rid of a datatype that is hard to manage relative to the goals of the software. Examples include migrating from single precision numeric types to multiple precision types by introducing the GMP library, or explicitly vectorizing arrays and loops by introducing the VC library, or simply migrating usages of character pointer to strings. Transformations of such nature are generally not simple cut and replace of method calls or declarations. They require tracking of dependencies, transforming code belonging to different kinds of syntactic classes and tracking information between transformations. Partially performing such transformations could potentially result in semantically and/or syntactically broken code. 
+      
+      Consider the scenario of explicitly vectorizing a array of struct of floats using the VC API. VC is an api that allows explicit vectorization of c++ code at the source level. The VC API provides a custom type called float\_v, which is a float vector, with capability to hold more than one float, depending on the hardware implementation. Transforming the array of struct of floats into an array of struct of float\_vs  would involve transforming the individual members of the struct definition into float vectors, using the information about the member types to construct a new reduced size for the array and transforming all usages of the array object if possible. Similar problems of dependency tracking and propagating information across transformations exist  with the other examples we have observed as part of our motivational study. 
+      
+              The existing refactorings in IDEs are limited by the fixed features of the IDEs and require cleverly written scripts to be triggered as multiple refactorings at a time. For example, Eclipse supports a fixed set of refactorings like "Extract function" or "Rename method".  IDE refactorings are not programmable, which means they do not support pattern matching and rewriting of different syntactic classes. It would require the developer to write extensive scripts to even trigger multiple refactorings in a specific order.  Transformation languages like Stratego/XT and Coccinelle allow specifying transformation rules to express generic patterns matches and code transformations. Stratego/XT uses term rewriting and strategies to combine(or compose) the transformations. Although Stratego/Xt is very powerful, it is limited when it comes to propagating information between rules, as is required when expressing the transformation of the array of structs in the VC example. Coccinelle allows elegant expression of code fragment rewriting in the form of diffs and permits propagating information between rules with rule parameters that can be updated within the rules and queried by other rules. But, Coccinelle does not support applying transformation rules that are triggered by a search through the code dependencies.
+              
+              We propose to design a language that can be used to express pattern matching and rewriting rules in the form of term equivalences. We specify how rules can be written in the language and introduce features that can be used to express propagating information across rules. The user can trigger the tool by providing a starting point, which is a combination of a code location and a set of rules (specifications) written in the language. The tool would attempt to apply a rule, with feedback from the user, as seems appropriate. The tool would then look through the dependencies of the transformed code and suggest applicable rules for those code locations. The process continues till the all code dependencies are exhausted or if the user chooses to stop the application of rules. The motivation of such a language and complementary tool is as follows:
 \begin{itemize}
 \item The expert user who writes the specifications has the freedom to write only partial specifications, which he can later update.
 \item The end user can use any set of specifications and has the freedom to choose where and how far to apply them and how much to manually transform.
 \end{itemize}
-The tool can provide an option to roll back if the user is not happy with the state of transformations.
+The tool provides an option to roll back if the user is not happy with the state of transformations.
 
 \section{Motivating Examples}
 \subsection{Using the GMP library to transform a single precision factorial into a multi precision factorial}
@@ -189,9 +194,9 @@ numbers=none]
 \caption{Integer to BigInteger conversion using GMP}
 \label{fig-gmp}
 \end{figure*}
-The main steps a developer going from int to multi precision integer would do are:
+The main steps a developer would perform in going from int to multi precision integer would do are:
 \begin{itemize}
-\item Flag the return value, find it's initialization and transform the initialization \textbf{int p = 1}. He would then need to use two function calls to transform the initialization into a vector version.
+\item Flag the return value, find its initialization and transform the initialization \textbf{int p = 1}. He would then need to use two statements, one to declare and another to initialize the value,  to transform the initialization into a vector version. 
 \item Search for usages of this newly transformed value and transform it's operations to reflect multi precision usages. In the above case, the developer would need to convert the assignment \textbf{p = p *i;}  into \textbf{mpz\_mul\_ui(p,p,i);} 
 \item Change the return type to reflect the type of the new value being returned.
 \end{itemize}
@@ -201,7 +206,7 @@ Ability to support expressing transformation rules for pattern matching and rewr
 Ability to walk through dependencies of transformations performed and then trigger transformation rules on the dependencies, if applicable and roll back the whole transformation, if no transformation rules are applicable.
 
 \subsection{Introducing the VC API}
-Consider another scenario where c++ code undergoes explicit vectorization using an API called VC \textbf{\ref{fig-vc}}. This api provides vector versions of primitive types and corresponding operations. Here is a simple example of a code undergoing transformation from scalar to a VC version.
+Consider another scenario where C++ code undergoes explicit vectorization using an API called VC \textbf{\ref{fig-vc}}. This api provides vector versions of primitive types and corresponding operations. Here is a simple example of a code undergoing transformation from scalar to a VC version.
 \begin{figure*}
 
  \begin{tikzpicture}
@@ -223,7 +228,7 @@ B bobj[1000];
 
 void fn()
 {
-   for(int i=0; i\textless 1000; i++)
+   for(int i=0; i< 1000; i++)
    {
         float temp = aobj[i].x;
         bobj[i].y = std::sqrt(temp);
@@ -250,7 +255,7 @@ Bv bobjv[1000/float_v::size];
 
 void fn()
 {
-   for(int i=0; i\textless 1000/float_v::size; i++)
+   for(int i=0; i< 1000/float_v::size; i++)
    {
         float_v tempv = aobjv[i].xv;
         bobjv[i].yv = vc::sqrt(tempv);
@@ -263,7 +268,7 @@ void fn()
 \caption{Introducing VC}
 \label{fig-vc}
 \end{figure*}
-The developer would need to perform many steps in order to transform the code in the left hand side to the one in the right hand side. Much of the steps and the features required can be categorized into one of the two features we listed with the example above. But the interesting bits are :
+The developer would need to perform many steps in order to transform the code in the left hand side to the one in the right hand side. The challenging steps to perform that are:
 \begin{itemize}
 
 \item The developer would need to analyse the type of \textbf{aobj} , and transform the definition of the \textbf{struct A}, as it comprises only of float members.
@@ -271,7 +276,7 @@ The developer would need to perform many steps in order to transform the code in
 \item Similarly, the user would also need to collect the information about the type of all array indexed elements inside the array in order to transform the limit of the for statement. 
 
 \end{itemize}
-The key feature that can be extracted out of the above listed steps is :
+Based on our developer intuition, the feature that would be required to perform the above mentioned steps are:
 \begin{itemize}
 \item Ability to collect information from one transformation and pass it on to transformations in other parts of the code.
 \end{itemize}
