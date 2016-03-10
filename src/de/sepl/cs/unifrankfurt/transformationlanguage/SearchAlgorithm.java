@@ -13,9 +13,11 @@ import java.util.Set;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
+import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
@@ -27,18 +29,21 @@ public class SearchAlgorithm {
 	private static Queue<IASTNode> workQueue = new LinkedList<IASTNode>();
 	private static NameVisitor visitor = new NameVisitor();
 	private static IASTTranslationUnit ast;
+	private static ASTRewrite astRewrite;
 
 	private static void populateRules() throws Exception {
 		rules = new HashSet<TTlRule>();
-		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < __ttllimit__; __ttlx__++ ) {__ttla__;  }",
+		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < __ttllimit__; __ttli__++ ) {__ttla__;  }",
 				NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(
-				"for(int _tti_ = 0 ; _ttli_ < _ttllimit_/float_v::size; _ttli_++ ) {__ttla__;  }", NodeType.Statement);
+				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/float_v::size; __ttli__++ ) {__ttla__;  }",
+				NodeType.Statement);
 		rules.add(new TTlRule(ttlPattern, ttlConstructExpression, NodeType.Statement));
 	}
 
-	public static void search(IASTNode selectedNode, IASTTranslationUnit ast) throws Exception {
+	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
 		SearchAlgorithm.ast = ast;
+		SearchAlgorithm.astRewrite = astRewrite;
 		populateRules();
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
@@ -48,11 +53,15 @@ public class SearchAlgorithm {
 	private static void searchBlock(List<IASTNode> selectedNodeAsList) throws Exception {
 		TTlRule rule = ruleApplicable(selectedNodeAsList);
 		if (rule != null) {
-			workQueueBlock(rule, selectedNodeAsList);
+			if (!isNodeHandled(selectedNodeAsList)) {
+				workQueueBlock(rule, selectedNodeAsList);
+			}
 		} else {
 			List<IASTNode> enclosingNode = getEnclosingNode(selectedNodeAsList);
 			TTlRule ruleForEnclosingNode = ruleApplicable(enclosingNode);
-			workQueueBlock(ruleForEnclosingNode, enclosingNode);
+			if (!isNodeHandled(enclosingNode)) {
+				workQueueBlock(ruleForEnclosingNode, enclosingNode);
+			}
 		}
 		if (!workQueue.isEmpty()) {
 			IASTNode unresolved = workQueue.remove();
@@ -89,7 +98,7 @@ public class SearchAlgorithm {
 		return null;
 	}
 
-	private static void workQueueBlock(TTlRule rule, List<IASTNode> selectedNodeAsList) {
+	private static void workQueueBlock(TTlRule rule, List<IASTNode> selectedNodeAsList) throws Exception {
 		if (applyRule(rule, selectedNodeAsList) && rule != null) {
 			AppliedRules.put(selectedNodeAsList, rule);
 		}
@@ -99,13 +108,35 @@ public class SearchAlgorithm {
 		}
 	}
 
-	private static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) {
+	private static boolean isNodeHandled(List<IASTNode> node) {
+		Set<Object> set1 = new HashSet<Object>();
+		set1.addAll(node);
+		for (List<IASTNode> node2 : AppliedRules.keySet()) {
+			Set<Object> set2 = new HashSet<Object>();
+			set2.addAll(node2);
+			if (set1.equals(set2)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
+	private static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) throws Exception {
 		// TODO: Make rule apply properly and perform the transformation
 		System.out.println("applying rule to ");
 		for (IASTNode node : selectedNodeAsList) {
 			System.out.println(node.getRawSignature());
 		}
-		return false;
+		if (selectedNodeAsList.size() == 1) {
+			TTlExpression ttlPattern = rule.lhs;
+			TTlExpression ttlFragmentToMatch = new TTlExpression(selectedNodeAsList.get(0).getRawSignature(),
+					rule.type);
+			Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
+			TTlExpression ttlConstructExpression = rule.rhs;
+			IASTNode nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
+			astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new TextEditGroup("API Migration"));
+		}
+		return true;
 	}
 
 	private static TTlRule ruleApplicable(List<IASTNode> selectedNodeAsList) throws Exception {
