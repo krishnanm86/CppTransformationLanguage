@@ -12,6 +12,8 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.cdt.core.dom.ast.ASTNodeFactoryFactory;
+import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
+import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTExpression;
@@ -63,7 +65,7 @@ import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 public class TTLUtils {
 
 	public enum TTLHoleType {
-		Expression, Statement, NotHole;
+		Expression, Statement, Name, Declarator, NotHole;
 	}
 
 	private final static String ttlHolePrefix = "__ttl";
@@ -119,6 +121,8 @@ public class TTLUtils {
 		case Statement:
 			nodeToReturn = getStatement(node);
 			break;
+		case DeclSpecifier:
+			nodeToReturn = getDeclSpecifier(node);
 		default:
 			break;
 		}
@@ -156,11 +160,14 @@ public class TTLUtils {
 					}
 					patternNodeChildIndex++;
 					if (patternNodeChildIndex != patternNode.getChildren().length
-							&& matchNode.getChildren().length != matchNodeChildIndex) {
-						while (!(isNodeEqualsWithChildren(patternNode.getChildren()[patternNodeChildIndex],
-								matchNode.getChildren()[matchNodeChildIndex]))) {
-							holeNodes.add(matchNode.getChildren()[matchNodeChildIndex].copy(CopyStyle.withLocations));
-							matchNodeChildIndex++;
+							&& !isTreeWithHoles(patternNode.getChildren()[patternNodeChildIndex])) {
+						if (matchNode.getChildren().length != matchNodeChildIndex) {
+							while (!(isNodeEqualsWithChildren(patternNode.getChildren()[patternNodeChildIndex],
+									matchNode.getChildren()[matchNodeChildIndex]))) {
+								holeNodes.add(
+										matchNode.getChildren()[matchNodeChildIndex].copy(CopyStyle.withLocations));
+								matchNodeChildIndex++;
+							}
 						}
 					}
 					holeMap.put(getTTLHoleId(patternNode.getChildren()[patternNodeChildIndex - 1]), holeNodes);
@@ -177,6 +184,18 @@ public class TTLUtils {
 
 		}
 		return true;
+	}
+
+	private static boolean isTreeWithHoles(IASTNode iastNode) {
+		if (isTTlHole(iastNode) != TTLHoleType.NotHole) {
+			return true;
+		} else {
+			boolean childrenHasHoles = false;
+			for (IASTNode child : iastNode.getChildren()) {
+				childrenHasHoles = childrenHasHoles || isTreeWithHoles(child);
+			}
+			return childrenHasHoles;
+		}
 	}
 
 	public static IASTNode construct(Map<String, List<IASTNode>> holeMap, TTlExpression expr) throws Exception {
@@ -245,6 +264,9 @@ public class TTLUtils {
 	}
 
 	private static boolean isNodeEqual(IASTNode patternNode, IASTNode matchNode) {
+		if (patternNode instanceof IASTCompositeTypeSpecifier && patternNode instanceof IASTCompositeTypeSpecifier) {
+			return true;
+		}
 		Object[] patternNodeDetails = getNameTypeHashCode(patternNode);
 		Class<?> typePatternNode = (Class<?>) patternNodeDetails[0];
 		char[] qnamePatternNode = (char[]) patternNodeDetails[1];
@@ -268,6 +290,10 @@ public class TTLUtils {
 			}
 		} else if (patternNode instanceof CPPASTIdExpression) {
 			return ((CPPASTIdExpression) patternNode).getName().toString();
+		} else if (patternNode instanceof IASTName) {
+			return ((IASTName) patternNode).toString();
+		} else if (patternNode instanceof IASTDeclarator) {
+			return ((IASTDeclarator) patternNode).getName().toString();
 		}
 		return "notahole";
 	}
@@ -291,7 +317,13 @@ public class TTLUtils {
 		}
 		if (patternNode instanceof IASTDeclarator) {
 			if (((IASTDeclarator) patternNode).getName().toString().startsWith(ttlHolePrefix)) {
-				return TTLHoleType.Expression;
+				return TTLHoleType.Declarator;
+			}
+		}
+
+		if (patternNode instanceof IASTName) {
+			if (((IASTName) patternNode).toString().startsWith(ttlHolePrefix)) {
+				return TTLHoleType.Name;
 			}
 		}
 		return TTLHoleType.NotHole;
@@ -403,6 +435,16 @@ public class TTLUtils {
 		return ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0];
 	}
 
+	public static IASTDeclSpecifier getDeclSpecifier(String str) throws Exception {
+		IASTTranslationUnit tu;
+		if (!str.endsWith(";")) {
+			tu = parse(str + ";");
+		} else {
+			tu = parse(str);
+		}
+		return ((CPPASTSimpleDeclaration) tu.getChildren()[0]).getDeclSpecifier();
+	}
+
 	public static IASTDeclaration getDeclaration(String str) throws Exception {
 		String compilableStr = "void fn(){" + str + ";}";
 		IASTTranslationUnit tu = parse(compilableStr);
@@ -441,6 +483,9 @@ public class TTLUtils {
 		}
 		if (type == NodeType.Expression) {
 			return enclosingNode instanceof IASTExpression;
+		}
+		if (type == NodeType.DeclSpecifier) {
+			return enclosingNode instanceof IASTDeclSpecifier;
 		}
 		return false;
 	}

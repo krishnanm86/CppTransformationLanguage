@@ -3,7 +3,7 @@ package de.sepl.cs.unifrankfurt.transformationlanguage;
 public class TTlExpression {
 
 	public enum NodeType {
-		Expression, Declaration, Statement
+		Expression, Declaration, Statement, DeclDefn, DeclSpecifier
 	}
 
 	String nodeWithHoles;

@@ -38,7 +38,13 @@ public class SearchAlgorithm {
 		TTlExpression ttlConstructExpression = new TTlExpression(
 				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/float_v::size; __ttli__++ ) {__ttla__;  }",
 				NodeType.Statement);
+		TTlExpression ttlPattern1 = new TTlExpression(
+				"struct __ttlstructname__ { float __ttla__;} __ttlaobj__[__ttllimit__];", NodeType.DeclDefn);
+		TTlExpression ttlConstructExpression1 = new TTlExpression(
+				"struct __ttlstructname___v { float_v __ttla___v;} __ttlaobj___v[__ttllimit__/float_v::size];",
+				NodeType.DeclDefn);
 		rules.add(new TTlRule(ttlPattern, ttlConstructExpression, NodeType.Statement));
+		rules.add(new TTlRule(ttlPattern1, ttlConstructExpression1, NodeType.DeclDefn));
 	}
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
@@ -143,11 +149,29 @@ public class SearchAlgorithm {
 		if (selectedNodeAsList.size() == 1) {
 			return ruleApplicableSingleNode(selectedNodeAsList.get(0));
 		} else {
-			// TODO: Handle the case when its a enclosing Node
+			// TODO: Handle the case when its a enclosing Node , only case is decl definition
+			return ruleApplicationEnclosingNode(selectedNodeAsList);
+		}
+	}
+
+	private static TTlRule ruleApplicationEnclosingNode(List<IASTNode> selectedNodeAsList) {
+		for(TTlRule rule : rules)
+		{
+			if(rule.type == NodeType.DeclDefn)
+			{				
+				String ruleString = rule.lhs.nodeWithHoles;
+				String str[] = ruleString.split("}");
+				
+				//Match Definition 
+				String definition = str[0] + "}";
+				IASTNode definitionNode = getDefinition(selectedNodeAsList);
+				boolean definitionMatch = TTLUtils.match(new TTlExpression(definition, NodeType.Declaration), new TTlExpression(definitionNode.getRawSignature(), NodeType.Declaration));
+			}
 		}
 		return null;
 	}
 
+	
 	private static TTlRule ruleApplicableSingleNode(IASTNode selectedNode) throws Exception {
 		for (TTlRule rule : rules) {
 			if (TTLUtils.checkType(rule.type, selectedNode)) {
