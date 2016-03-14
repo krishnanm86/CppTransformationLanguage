@@ -50,6 +50,17 @@ public class VCSpecs {
 		String rhs = inttagUpdates.get("__tagttlvctype__") + "   __ttla__v"; 
 		ScopeRule intRule = new ScopeRule(lhs, rhs, NodeType.Declaration, inttagUpdates);
 		structScopeRules.add(intRule);
+		
+		
+		Map<String, String> floattagUpdate = new HashMap<String, String>();
+		floattagUpdate.put("__tagttlvctype__", "float_v");
+		String lhsfloat = "float __ttla__;";
+		String rhsfloat = floattagUpdate.get("__tagttlvctype__") + "   __ttla__v"; 
+		ScopeRule floatRule = new ScopeRule(lhsfloat, rhsfloat, NodeType.Declaration, floattagUpdate);
+		structScopeRules.add(floatRule);
+		
+		
+		
 		Map<String, String> structTagValueMap = new HashMap<String, String>();
 		Scope structScope = new Scope(structScopeRules, structTagValueMap);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();

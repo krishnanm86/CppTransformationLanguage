@@ -10,7 +10,6 @@
 /ttlLexer.tokens
 /ttlListener.java
 /ttlParser.java
-/ttl.g4
 /de/
 /ttlBaseListener.class
 /ttlLexer.class
