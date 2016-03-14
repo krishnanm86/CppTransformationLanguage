@@ -198,7 +198,15 @@ public class SearchAlgorithm {
 			// Apply Rule for definition
 			if (definitionNode != null) {
 				TTlExpression ttlConstructExpression = new TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier);
-				IASTNode nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression);
+				IASTNode nodeToReplace = null;
+				for (Scope s : rule.scopeFragmentMap.keySet()) {
+					if (!s.tagValueMap.isEmpty()) {
+						nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression, s.tagValueMap);
+					}
+				}
+				if (nodeToReplace == null) {
+					nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression);
+				}
 				astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup("API Migration"));
 			}
 
@@ -206,7 +214,15 @@ public class SearchAlgorithm {
 			if (declarationNode != null) {
 				TTlExpression ttlConstructExpression = new TTlExpression("new___ttltype__ " + strRhs[1],
 						NodeType.Declaration);
-				IASTNode nodeToReplace = TTLUtils.construct(declarationMatch, ttlConstructExpression);
+				IASTNode nodeToReplace = null;
+				for (Scope s : rule.scopeFragmentMap.keySet()) {
+					if (!s.tagValueMap.isEmpty()) {
+						nodeToReplace = TTLUtils.construct(declarationMatch, ttlConstructExpression, s.tagValueMap);
+					}
+				}
+				if (nodeToReplace == null) {
+					TTLUtils.construct(declarationMatch, ttlConstructExpression);
+				}
 				astRewrite.replace(declarationNode, nodeToReplace, new TextEditGroup("API Migration"));
 			}
 		}

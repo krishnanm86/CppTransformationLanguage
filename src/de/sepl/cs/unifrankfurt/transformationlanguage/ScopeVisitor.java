@@ -65,10 +65,7 @@ public class ScopeVisitor extends ASTVisitor {
 					if (holeMap.size() > 0) {
 						TTLUtils.printHoleMap(holeMap);
 						System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
-
 						for (String tagKey : r.tagUpdates.keySet()) {
-							// scope.tagValueMap.put(tagKey,
-							// r.tagUpdates.get(tagKey));
 							if (scope.tagValueMap.containsKey(tagKey)) {
 								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdates.get(tagKey))) {
 									scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
