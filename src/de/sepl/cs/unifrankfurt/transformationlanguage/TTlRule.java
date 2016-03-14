@@ -20,7 +20,7 @@ public class TTlRule {
 		}
 	}
 
-	public TTlRule(NodeType type, TTlExpression lhs, TTlExpression rhs, Map<Scope, String> scopeFragmentMap,
+	public TTlRule(TTlExpression lhs, TTlExpression rhs, NodeType type, Map<Scope, String> scopeFragmentMap,
 			Map<Tag, String> tagValueMap) throws Exception {
 		this(lhs, rhs, type);
 		this.scopeFragmentMap = scopeFragmentMap;

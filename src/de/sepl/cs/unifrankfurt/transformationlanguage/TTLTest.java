@@ -25,13 +25,13 @@ public class TTLTest {
 		//ASTPrinter.print(TTLUtils.getStatement("for(int i = 0 ; i < 10; i++ ) {__ttla__; }"));
 		//ASTPrinter.print(TTLUtils.getExpression("a[__ttla__]"));
 	
-		 TTlExpression ttlPattern = new TTlExpression("__ttltype__ __ttlname__[__ttllimit__];",
-				NodeType.Declaration);
+		 TTlExpression ttlPattern = new TTlExpression("struct __ttlstructname__ {  __ttlstructbody__; }",
+				NodeType.DeclSpecifier);
 		TTlExpression ttlConstructExpression = new TTlExpression(
-				"new___ttltype__ __ttlname___v[__ttllimit__/float_v::Size];", NodeType.Declaration);
+				"struct __ttlstructname___v {  __ttlstructbody__; }", NodeType.DeclSpecifier);
 
 		TTlExpression ttlFragmentToMatch = new TTlExpression(
-				"A aobj[1000]; ", NodeType.Declaration);
+				"struct A{ int  a; int b;} ", NodeType.DeclSpecifier);
 		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 		TTLUtils.printHoleMap(holeMap);
 		System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());

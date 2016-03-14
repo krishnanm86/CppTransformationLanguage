@@ -55,6 +55,7 @@ import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTIdExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTUsingDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.GNUCPPSourceParser;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.CPPVisitor;
 import org.eclipse.cdt.internal.core.dom.rewrite.astwriter.StatementWriter;
@@ -266,7 +267,8 @@ public class TTLUtils {
 	}
 
 	private static boolean isNodeEqual(IASTNode patternNode, IASTNode matchNode) {
-		if (patternNode instanceof IASTCompositeTypeSpecifier || patternNode instanceof IASTNamedTypeSpecifier || patternNode instanceof IASTArrayDeclarator) {
+		if (patternNode instanceof IASTCompositeTypeSpecifier || patternNode instanceof IASTNamedTypeSpecifier
+				|| patternNode instanceof IASTArrayDeclarator) {
 			return true;
 		}
 		Object[] patternNodeDetails = getNameTypeHashCode(patternNode);
@@ -296,6 +298,8 @@ public class TTLUtils {
 			return ((IASTName) patternNode).toString();
 		} else if (patternNode instanceof IASTDeclarator) {
 			return ((IASTDeclarator) patternNode).getName().toString();
+		} else if (patternNode instanceof CPPASTUsingDeclaration) {
+			return ((CPPASTUsingDeclaration) patternNode).getName().toString();
 		}
 		return "notahole";
 	}
@@ -310,6 +314,13 @@ public class TTLUtils {
 			if (((CPPASTExpressionStatement) patternNode).getExpression() instanceof CPPASTIdExpression) {
 				if (((CPPASTIdExpression) ((CPPASTExpressionStatement) patternNode).getExpression()).getName()
 						.toString().startsWith(ttlHolePrefix)) {
+					return TTLHoleType.Statement;
+				}
+			}
+		}
+		if (patternNode instanceof CPPASTUsingDeclaration) {
+			if (((CPPASTUsingDeclaration) patternNode).getName().toString().startsWith(ttlHolePrefix)) {
+				{
 					return TTLHoleType.Statement;
 				}
 			}

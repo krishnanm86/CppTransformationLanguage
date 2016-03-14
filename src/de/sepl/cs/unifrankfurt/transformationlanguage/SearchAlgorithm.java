@@ -19,6 +19,7 @@ import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+import org.eclipse.cdt.internal.ui.refactoring.ModificationCollector;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
@@ -32,27 +33,14 @@ public class SearchAlgorithm {
 	private static NameVisitor visitor = new NameVisitor();
 	private static IASTTranslationUnit ast;
 	private static ASTRewrite astRewrite;
+	private static ModificationCollector collector;
 
-	private static void populateRules() throws Exception {
-		rules = new HashSet<TTlRule>();
-		TTlExpression ttlPattern = new TTlExpression("for(int i = 0 ; i < __ttllimit__; __ttli__++ ) {__ttla__;  }",
-				NodeType.Statement);
-		TTlExpression ttlConstructExpression = new TTlExpression(
-				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/float_v::size; __ttli__++ ) {__ttla__;  }",
-				NodeType.Statement);
-		TTlExpression ttlPattern1 = new TTlExpression(
-				"struct __ttlstructname__ { float __ttla__;} __ttlaobj__[__ttllimit__];", NodeType.DeclDefn);
-		TTlExpression ttlConstructExpression1 = new TTlExpression(
-				"struct __ttlstructname___v { float_v __ttla___v;} __ttlaobj___v[__ttllimit__/float_v::size];",
-				NodeType.DeclDefn);
-		rules.add(new TTlRule(ttlPattern, ttlConstructExpression, NodeType.Statement));
-		rules.add(new TTlRule(ttlPattern1, ttlConstructExpression1, NodeType.DeclDefn));
-	}
-
-	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
+	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite,
+			ModificationCollector collector) throws Exception {
 		SearchAlgorithm.ast = ast;
+		SearchAlgorithm.collector = collector;
 		SearchAlgorithm.astRewrite = astRewrite;
-		populateRules();
+		rules = VCSpecs.populateRules();
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
 		searchBlock(selectedNodeAsList);
@@ -143,16 +131,15 @@ public class SearchAlgorithm {
 			TTlExpression ttlConstructExpression = rule.rhs;
 			IASTNode nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
 			astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new TextEditGroup("API Migration"));
-		}
-		else
-		{	
+		} else if (rule != null) {
 			String ruleLhsString = rule.lhs.nodeWithHoles;
 			String strLhs[] = ruleLhsString.split("}");
-			
+
 			String ruleRhsString = rule.rhs.nodeWithHoles;
 			String strRhs[] = ruleRhsString.split("}");
-			
-			//Apply rule for definition
+
+			// Get Hole Map for definition
+
 			String definitionRule = strLhs[0] + "}";
 			IASTNode definitionNode = getDefinition(selectedNodeAsList);
 			Map<String, List<IASTNode>> definitionMatch = new HashMap<String, List<IASTNode>>();
@@ -160,12 +147,9 @@ public class SearchAlgorithm {
 			if (definitionNode != null) {
 				definitionMatch = TTLUtils.match(new TTlExpression(definitionRule, NodeType.DeclSpecifier),
 						new TTlExpression(definitionNode.getRawSignature(), NodeType.DeclSpecifier));
-				TTlExpression ttlConstructExpression = new TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier);
-				IASTNode nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression);
-				astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup("API Migration"));
 			}
 
-			//Apply rule for declaration
+			// Get Hole Map for declaration
 			String declarationRule = "__ttltype__ " + strLhs[1];
 			IASTNode declarationNode = getDeclaration(selectedNodeAsList);
 			Map<String, List<IASTNode>> declarationMatch = new HashMap<String, List<IASTNode>>();
@@ -173,7 +157,55 @@ public class SearchAlgorithm {
 			if (declarationNode != null) {
 				declarationMatch = TTLUtils.match(new TTlExpression(declarationRule, NodeType.Declaration),
 						new TTlExpression(declarationNode.getRawSignature(), NodeType.Declaration));
-				TTlExpression ttlConstructExpression = new TTlExpression("new___ttltype__ " + strRhs[1], NodeType.Declaration);
+			}
+
+			// Apply tags and scope rules
+			if (rule.scopeFragmentMap != null && rule.tagValueMap != null) {
+				for (Scope scope : rule.scopeFragmentMap.keySet()) {
+					ScopeVisitor s = new ScopeVisitor(scope, astRewrite);
+					if (definitionMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
+						List<IASTNode> scopeMatches = definitionMatch.get(rule.scopeFragmentMap.get(scope));
+						System.out.println("Scope applicable to ");
+						for (IASTNode node : scopeMatches) {
+							System.out.println(node.getRawSignature());
+							// s.setAstRewrite(collector.rewriterForTranslationUnit(node.getTranslationUnit()));
+							node.accept(s);
+							System.out.println("_______Tag accept");
+							for (String tagUpdates : scope.tagValueMap.keySet()) {
+								System.out.println(tagUpdates + "=" + scope.tagValueMap.get(tagUpdates));
+							}
+							System.out.println("_______");
+						}
+						System.out.println("-----");
+					} else if (declarationMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
+						List<IASTNode> scopeMatches = declarationMatch.get(rule.scopeFragmentMap.get(scope));
+						System.out.println("Scope applicable to ");
+						for (IASTNode node : scopeMatches) {
+							System.out.println(node.getRawSignature());
+							s.setAstRewrite(collector.rewriterForTranslationUnit(node.getTranslationUnit()));
+							node.accept(s);
+							System.out.println("_______Tag accept");
+							for (String tagUpdates : scope.tagValueMap.keySet()) {
+								System.out.println(tagUpdates + "=" + scope.tagValueMap.get(tagUpdates));
+							}
+							System.out.println("_______");
+						}
+						System.out.println("-----");
+					}
+				}
+			}
+
+			// Apply Rule for definition
+			if (definitionNode != null) {
+				TTlExpression ttlConstructExpression = new TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier);
+				IASTNode nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression);
+				astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup("API Migration"));
+			}
+
+			// Apply rule for declaration
+			if (declarationNode != null) {
+				TTlExpression ttlConstructExpression = new TTlExpression("new___ttltype__ " + strRhs[1],
+						NodeType.Declaration);
 				IASTNode nodeToReplace = TTLUtils.construct(declarationMatch, ttlConstructExpression);
 				astRewrite.replace(declarationNode, nodeToReplace, new TextEditGroup("API Migration"));
 			}
