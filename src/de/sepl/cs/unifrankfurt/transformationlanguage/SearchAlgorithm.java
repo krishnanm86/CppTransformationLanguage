@@ -10,6 +10,8 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
+import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
@@ -142,6 +144,40 @@ public class SearchAlgorithm {
 			IASTNode nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
 			astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new TextEditGroup("API Migration"));
 		}
+		else
+		{	
+			String ruleLhsString = rule.lhs.nodeWithHoles;
+			String strLhs[] = ruleLhsString.split("}");
+			
+			String ruleRhsString = rule.rhs.nodeWithHoles;
+			String strRhs[] = ruleRhsString.split("}");
+			
+			//Apply rule for definition
+			String definitionRule = strLhs[0] + "}";
+			IASTNode definitionNode = getDefinition(selectedNodeAsList);
+			Map<String, List<IASTNode>> definitionMatch = new HashMap<String, List<IASTNode>>();
+
+			if (definitionNode != null) {
+				definitionMatch = TTLUtils.match(new TTlExpression(definitionRule, NodeType.DeclSpecifier),
+						new TTlExpression(definitionNode.getRawSignature(), NodeType.DeclSpecifier));
+				TTlExpression ttlConstructExpression = new TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier);
+				IASTNode nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression);
+				astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup("API Migration"));
+			}
+
+			//Apply rule for declaration
+			String declarationRule = "__ttltype__ " + strLhs[1];
+			IASTNode declarationNode = getDeclaration(selectedNodeAsList);
+			Map<String, List<IASTNode>> declarationMatch = new HashMap<String, List<IASTNode>>();
+
+			if (declarationNode != null) {
+				declarationMatch = TTLUtils.match(new TTlExpression(declarationRule, NodeType.Declaration),
+						new TTlExpression(declarationNode.getRawSignature(), NodeType.Declaration));
+				TTlExpression ttlConstructExpression = new TTlExpression("new___ttltype__ " + strRhs[1], NodeType.Declaration);
+				IASTNode nodeToReplace = TTLUtils.construct(declarationMatch, ttlConstructExpression);
+				astRewrite.replace(declarationNode, nodeToReplace, new TextEditGroup("API Migration"));
+			}
+		}
 		return true;
 	}
 
@@ -149,29 +185,11 @@ public class SearchAlgorithm {
 		if (selectedNodeAsList.size() == 1) {
 			return ruleApplicableSingleNode(selectedNodeAsList.get(0));
 		} else {
-			// TODO: Handle the case when its a enclosing Node , only case is decl definition
+			// only case decl definition
 			return ruleApplicationEnclosingNode(selectedNodeAsList);
 		}
 	}
 
-	private static TTlRule ruleApplicationEnclosingNode(List<IASTNode> selectedNodeAsList) {
-		for(TTlRule rule : rules)
-		{
-			if(rule.type == NodeType.DeclDefn)
-			{				
-				String ruleString = rule.lhs.nodeWithHoles;
-				String str[] = ruleString.split("}");
-				
-				//Match Definition 
-				String definition = str[0] + "}";
-				IASTNode definitionNode = getDefinition(selectedNodeAsList);
-				boolean definitionMatch = TTLUtils.match(new TTlExpression(definition, NodeType.Declaration), new TTlExpression(definitionNode.getRawSignature(), NodeType.Declaration));
-			}
-		}
-		return null;
-	}
-
-	
 	private static TTlRule ruleApplicableSingleNode(IASTNode selectedNode) throws Exception {
 		for (TTlRule rule : rules) {
 			if (TTLUtils.checkType(rule.type, selectedNode)) {
@@ -179,6 +197,55 @@ public class SearchAlgorithm {
 				if (TTLUtils.match(rule.lhs, ttlFragmentToMatch).size() > 0) {
 					return rule;
 				}
+			}
+		}
+		return null;
+	}
+
+	private static TTlRule ruleApplicationEnclosingNode(List<IASTNode> selectedNodeAsList) throws Exception {
+		for (TTlRule rule : rules) {
+			if (rule.type == NodeType.DeclDefn) {
+				String ruleString = rule.lhs.nodeWithHoles;
+				String str[] = ruleString.split("}");
+
+				// Match Definition
+				String definitionRule = str[0] + "}";
+				IASTNode definitionNode = getDefinition(selectedNodeAsList);
+				Map<String, List<IASTNode>> definitionMatch = new HashMap<String, List<IASTNode>>();
+
+				if (definitionNode != null) {
+					definitionMatch = TTLUtils.match(new TTlExpression(definitionRule, NodeType.DeclSpecifier),
+							new TTlExpression(definitionNode.getRawSignature(), NodeType.DeclSpecifier));
+				}
+				// Match Definition
+				String declarationRule = "__ttltype__ " + str[1];
+				IASTNode declarationNode = getDeclaration(selectedNodeAsList);
+				Map<String, List<IASTNode>> declarationMatch = new HashMap<String, List<IASTNode>>();
+				if (declarationNode != null) {
+					declarationMatch = TTLUtils.match(new TTlExpression(declarationRule, NodeType.Declaration),
+							new TTlExpression(declarationNode.getRawSignature(), NodeType.Declaration));
+				}
+
+				if (definitionMatch.size() > 0 && declarationMatch.size() > 0)
+					return rule;
+			}
+		}
+		return null;
+	}
+
+	private static IASTNode getDeclaration(List<IASTNode> selectedNodeAsList) {
+		for (IASTNode node : selectedNodeAsList) {
+			if (node instanceof IASTDeclaration) {
+				return node;
+			}
+		}
+		return null;
+	}
+
+	private static IASTNode getDefinition(List<IASTNode> selectedNodeAsList) {
+		for (IASTNode node : selectedNodeAsList) {
+			if (node instanceof IASTCompositeTypeSpecifier) {
+				return node;
 			}
 		}
 		return null;

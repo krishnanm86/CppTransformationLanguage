@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.cdt.core.dom.ast.ASTNodeFactoryFactory;
+import org.eclipse.cdt.core.dom.ast.IASTArrayDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
@@ -21,6 +22,7 @@ import org.eclipse.cdt.core.dom.ast.IASTExpressionStatement;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionCallExpression;
 import org.eclipse.cdt.core.dom.ast.IASTLiteralExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
+import org.eclipse.cdt.core.dom.ast.IASTNamedTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTNode.CopyStyle;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
@@ -264,7 +266,7 @@ public class TTLUtils {
 	}
 
 	private static boolean isNodeEqual(IASTNode patternNode, IASTNode matchNode) {
-		if (patternNode instanceof IASTCompositeTypeSpecifier && patternNode instanceof IASTCompositeTypeSpecifier) {
+		if (patternNode instanceof IASTCompositeTypeSpecifier || patternNode instanceof IASTNamedTypeSpecifier || patternNode instanceof IASTArrayDeclarator) {
 			return true;
 		}
 		Object[] patternNodeDetails = getNameTypeHashCode(patternNode);
@@ -301,6 +303,9 @@ public class TTLUtils {
 	private static TTLHoleType isTTlHole(IASTNode patternNode) {
 		// Either an ExpressionStatement with just an ID Expression with the
 		// name starting with the prefix
+		if (patternNode instanceof IASTArrayDeclarator) {
+			return TTLHoleType.NotHole;
+		}
 		if (patternNode instanceof CPPASTExpressionStatement) {
 			if (((CPPASTExpressionStatement) patternNode).getExpression() instanceof CPPASTIdExpression) {
 				if (((CPPASTIdExpression) ((CPPASTExpressionStatement) patternNode).getExpression()).getName()
