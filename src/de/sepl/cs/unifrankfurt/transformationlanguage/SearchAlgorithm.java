@@ -10,8 +10,11 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
+import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
+import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
@@ -19,6 +22,7 @@ import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.IASTAmbiguityParent;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
 import org.eclipse.cdt.internal.ui.refactoring.ModificationCollector;
 import org.eclipse.text.edits.TextEditGroup;
@@ -35,9 +39,11 @@ public class SearchAlgorithm {
 	private static IASTTranslationUnit ast;
 	private static ASTRewrite astRewrite;
 	private static ModificationCollector collector;
+	private static Migrations migrations = new Migrations();
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite,
 			ModificationCollector collector) throws Exception {
+		migrations = new Migrations();
 		SearchAlgorithm.ast = ast;
 		SearchAlgorithm.collector = collector;
 		SearchAlgorithm.astRewrite = astRewrite;
@@ -45,6 +51,7 @@ public class SearchAlgorithm {
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
 		searchBlock(selectedNodeAsList);
+		System.out.println(migrations);
 	}
 
 	private static void searchBlock(List<IASTNode> selectedNodeAsList) throws Exception {
@@ -132,7 +139,7 @@ public class SearchAlgorithm {
 			TTlExpression ttlConstructExpression = rule.rhs;
 			IASTNode nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
 			astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new TextEditGroup("API Migration"));
-		} else if (rule != null) {
+		} else if (rule != null && rule.type == NodeType.DeclDefn) {
 			String ruleLhsString = rule.lhs.nodeWithHoles;
 			String strLhs[] = ruleLhsString.split("}");
 
@@ -166,38 +173,27 @@ public class SearchAlgorithm {
 					ScopeVisitor s = new ScopeVisitor(scope, astRewrite);
 					if (definitionMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
 						List<IASTNode> scopeMatches = definitionMatch.get(rule.scopeFragmentMap.get(scope));
-						System.out.println("Scope applicable to ");
 						List<IASTNode> scopeMatchesNew = new ArrayList<IASTNode>();
 						for (IASTNode node : scopeMatches) {
-							System.out.println(node.getRawSignature());
-							// s.setAstRewrite(collector.rewriterForTranslationUnit(node.getTranslationUnit()));
 							node.accept(s);
 							scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
-							System.out.println("Replaced node");
-							System.out.println(node.getRawSignature());
 							s.refreshNodeReplacements();
 						}
 						definitionMatch.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
-						System.out.println("-----");
 					} else if (declarationMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
 						List<IASTNode> scopeMatches = declarationMatch.get(rule.scopeFragmentMap.get(scope));
-						System.out.println("Scope applicable to ");
 						List<IASTNode> scopeMatchesNew = new ArrayList<IASTNode>();
 						for (IASTNode node : scopeMatches) {
-							System.out.println(node.getRawSignature());
-							s.setAstRewrite(collector.rewriterForTranslationUnit(node.getTranslationUnit()));
 							node.accept(s);
 							scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
-							System.out.println("Replaced node");
-							System.out.println(node.getRawSignature());
 							s.refreshNodeReplacements();
 						}
 						declarationMatch.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
-						System.out.println("-----");
 					}
 				}
 			}
 
+			TypeMigration typeMigration = null;
 			// Apply Rule for definition
 			if (definitionNode != null) {
 				TTlExpression ttlConstructExpression = new TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier);
@@ -211,11 +207,13 @@ public class SearchAlgorithm {
 					nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression);
 				}
 				astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup("API Migration"));
+				typeMigration = getTypeMigration((CPPASTCompositeTypeSpecifier) definitionNode,
+						(CPPASTCompositeTypeSpecifier) nodeToReplace);
 			}
 
 			// Apply rule for declaration
 			if (declarationNode != null) {
-				TTlExpression ttlConstructExpression = new TTlExpression("new___ttltype__ " + strRhs[1],
+				TTlExpression ttlConstructExpression = new TTlExpression(typeMigration.newTypeName + " " + strRhs[1],
 						NodeType.Declaration);
 				IASTNode nodeToReplace = null;
 				for (Scope s : rule.scopeFragmentMap.keySet()) {
@@ -224,12 +222,58 @@ public class SearchAlgorithm {
 					}
 				}
 				if (nodeToReplace == null) {
-					TTLUtils.construct(declarationMatch, ttlConstructExpression);
+					nodeToReplace = TTLUtils.construct(declarationMatch, ttlConstructExpression);
 				}
 				astRewrite.replace(declarationNode, nodeToReplace, new TextEditGroup("API Migration"));
+				String oldName = getVarNameFromDeclaration((IASTDeclaration) declarationNode);
+				String newName = getVarNameFromDeclaration((IASTDeclaration) nodeToReplace);
+				;
+				migrations.varMigrations.put(Pair.of(oldName, newName), typeMigration);
 			}
 		}
 		return true;
+	}
+
+	private static String getVarNameFromDeclaration(IASTDeclaration declarationNode) {
+		if (((CPPASTSimpleDeclaration) declarationNode).getDeclarators().length == 1) {
+			return ((CPPASTSimpleDeclaration) declarationNode).getDeclarators()[0].getName().toString();
+		}
+		return null;
+	}
+
+	private static TypeMigration getTypeMigration(CPPASTCompositeTypeSpecifier definitionNode,
+			CPPASTCompositeTypeSpecifier nodeToReplace) {
+		String oldTypeName = definitionNode.getName().toString();
+		String newTypeName = nodeToReplace.getName().toString();
+		Map<Pair<String, String>, Pair<String, String>> fieldMapping = new HashMap<Pair<String, String>, Pair<String, String>>();
+		if (definitionNode.getDeclarations(true).length <= nodeToReplace.getDeclarations(true).length) {
+			for (int i = 0; i < definitionNode.getDeclarations(true).length; i++) {
+				if (definitionNode.getDeclarations(true)[i] instanceof CPPASTSimpleDeclaration
+						&& nodeToReplace.getDeclarations(true)[i] instanceof CPPASTSimpleDeclaration) {
+					IASTDeclSpecifier oldSpecifier = ((CPPASTSimpleDeclaration) definitionNode.getDeclarations(true)[i])
+							.getDeclSpecifier();
+					String oldType = oldSpecifier.getRawSignature();
+					String oldName = "";
+					IASTDeclarator[] oldDeclarators = ((CPPASTSimpleDeclaration) definitionNode
+							.getDeclarations(true)[i]).getDeclarators();
+					if (oldDeclarators.length == 1) {
+						oldName = oldDeclarators[0].getRawSignature();
+					}
+
+					IASTDeclSpecifier newSpecifier = ((CPPASTSimpleDeclaration) nodeToReplace.getDeclarations(true)[i])
+							.getDeclSpecifier();
+					String newType = newSpecifier.getRawSignature();
+					String newName = "";
+					IASTDeclarator[] newDeclarators = ((CPPASTSimpleDeclaration) nodeToReplace.getDeclarations(true)[i])
+							.getDeclarators();
+					if (newDeclarators.length == 1) {
+						newName = newDeclarators[0].getRawSignature();
+					}
+					fieldMapping.put(Pair.of(oldType, oldName), Pair.of(newType, newName));
+				}
+			}
+		}
+		return new TypeMigration(oldTypeName, newTypeName, fieldMapping);
 	}
 
 	private static IASTNode replaceNodes(IASTNode node, Map<IASTNode, IASTNode> nodeReplacements) {

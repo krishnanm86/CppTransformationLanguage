@@ -14,12 +14,14 @@ public class Migrations {
 
 	Map<Pair<String, String>, TypeMigration> varMigrations = new HashMap<Pair<String, String>, TypeMigration>();
 
-	
+	public Migrations() {
+		varMigrations = new HashMap<Pair<String, String>, TypeMigration>();
+	}
+
 	public Migrations(Map<Pair<String, String>, TypeMigration> varMigrations) {
 		super();
 		this.varMigrations = varMigrations;
 	}
-
 
 	public String getMigratedName(String oldName) throws Exception {
 		String varName = null, fieldName = null;
@@ -46,12 +48,20 @@ public class Migrations {
 				TypeMigration typeMigration = varMigrations.get(varMigration);
 				for (Pair<String, String> oldField : typeMigration.fieldMapping.keySet()) {
 					if (oldField.getRight().equals(fieldName)) {
-						oldName = oldName.replace("." + fieldName, "." + typeMigration.fieldMapping.get(oldField).getRight());
+						oldName = oldName.replace("." + fieldName,
+								"." + typeMigration.fieldMapping.get(oldField).getRight());
 					}
 				}
 			}
 		}
 		return oldName;
 	}
+
+	@Override
+	public String toString() {
+		return "Migrations [varMigrations=" + varMigrations + "]";
+	}
+	
+	
 
 }

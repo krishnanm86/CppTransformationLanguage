@@ -42,4 +42,11 @@ public class TypeMigration {
 		this.fieldMapping = fieldMapping;
 	}
 
+	@Override
+	public String toString() {
+		return "TypeMigration [oldTypeName=" + oldTypeName + ", newTypeName=" + newTypeName + ", fieldMapping="
+				+ fieldMapping + "]";
+	}
+
+	
 }
