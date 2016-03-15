@@ -41,26 +41,34 @@ public class VCSpecs {
 		return tagValueMap;
 	}
 
+	private static Map<Scope, String> getScopeFragmentMapForStatement() {
+		List<ScopeRule> forScopeRules = new ArrayList<ScopeRule>();
+
+		
+		Map<String, String> forTagValueMap = new HashMap<String, String>();
+		Scope forScope = new Scope(forScopeRules, forTagValueMap);
+		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();
+		scopeFragMentMap.put(forScope, "__ttlloopbody__");
+		return scopeFragMentMap;
+	}
+
 	private static Map<Scope, String> getScopeFragMentMapStruct() {
 
 		Map<String, String> inttagUpdates = new HashMap<String, String>();
 		inttagUpdates.put("__tagttlvctype__", "int_v");
 		List<ScopeRule> structScopeRules = new ArrayList<ScopeRule>();
 		String lhs = "int __ttla__;";
-		String rhs = inttagUpdates.get("__tagttlvctype__") + "   __ttla__v"; 
+		String rhs = inttagUpdates.get("__tagttlvctype__") + "   __ttla__v";
 		ScopeRule intRule = new ScopeRule(lhs, rhs, NodeType.Declaration, inttagUpdates);
 		structScopeRules.add(intRule);
-		
-		
+
 		Map<String, String> floattagUpdate = new HashMap<String, String>();
 		floattagUpdate.put("__tagttlvctype__", "float_v");
 		String lhsfloat = "float __ttla__;";
-		String rhsfloat = floattagUpdate.get("__tagttlvctype__") + "   __ttla__v"; 
+		String rhsfloat = floattagUpdate.get("__tagttlvctype__") + "   __ttla__v";
 		ScopeRule floatRule = new ScopeRule(lhsfloat, rhsfloat, NodeType.Declaration, floattagUpdate);
 		structScopeRules.add(floatRule);
-		
-		
-		
+
 		Map<String, String> structTagValueMap = new HashMap<String, String>();
 		Scope structScope = new Scope(structScopeRules, structTagValueMap);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();

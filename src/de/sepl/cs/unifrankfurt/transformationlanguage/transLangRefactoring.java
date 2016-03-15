@@ -2,10 +2,13 @@ package de.sepl.cs.unifrankfurt.transformationlanguage;
 
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
+import org.eclipse.cdt.core.dom.ast.IBinding;
 import org.eclipse.cdt.core.model.ICElement;
 import org.eclipse.cdt.core.model.ICProject;
 import org.eclipse.cdt.core.parser.IParserLogService;
 import org.eclipse.cdt.core.parser.NullLogService;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldDeclarator;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
 import org.eclipse.cdt.internal.ui.refactoring.CRefactoring;
 import org.eclipse.cdt.internal.ui.refactoring.ModificationCollector;
 import org.eclipse.core.runtime.CoreException;
@@ -19,7 +22,7 @@ import org.eclipse.ltk.core.refactoring.RefactoringStatus;
 public class transLangRefactoring extends CRefactoring {
 	protected static final IParserLogService NULL_LOG = new NullLogService();
 	private IASTNode selectedNode = null;
-	private static IASTTranslationUnit ast = null;
+	public static IASTTranslationUnit ast = null;
 
 	public transLangRefactoring(ICElement element, ISelection selection, ICProject project) {
 		super(element, selection, project);
