@@ -16,6 +16,7 @@ import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.cdt.internal.core.dom.parser.IASTAmbiguityParent;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
@@ -166,30 +167,32 @@ public class SearchAlgorithm {
 					if (definitionMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
 						List<IASTNode> scopeMatches = definitionMatch.get(rule.scopeFragmentMap.get(scope));
 						System.out.println("Scope applicable to ");
+						List<IASTNode> scopeMatchesNew = new ArrayList<IASTNode>();
 						for (IASTNode node : scopeMatches) {
 							System.out.println(node.getRawSignature());
 							// s.setAstRewrite(collector.rewriterForTranslationUnit(node.getTranslationUnit()));
 							node.accept(s);
-							System.out.println("_______Tag accept");
-							for (String tagUpdates : scope.tagValueMap.keySet()) {
-								System.out.println(tagUpdates + "=" + scope.tagValueMap.get(tagUpdates));
-							}
-							System.out.println("_______");
+							scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
+							System.out.println("Replaced node");
+							System.out.println(node.getRawSignature());
+							s.refreshNodeReplacements();
 						}
+						definitionMatch.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
 						System.out.println("-----");
 					} else if (declarationMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
 						List<IASTNode> scopeMatches = declarationMatch.get(rule.scopeFragmentMap.get(scope));
 						System.out.println("Scope applicable to ");
+						List<IASTNode> scopeMatchesNew = new ArrayList<IASTNode>();
 						for (IASTNode node : scopeMatches) {
 							System.out.println(node.getRawSignature());
 							s.setAstRewrite(collector.rewriterForTranslationUnit(node.getTranslationUnit()));
 							node.accept(s);
-							System.out.println("_______Tag accept");
-							for (String tagUpdates : scope.tagValueMap.keySet()) {
-								System.out.println(tagUpdates + "=" + scope.tagValueMap.get(tagUpdates));
-							}
-							System.out.println("_______");
+							scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
+							System.out.println("Replaced node");
+							System.out.println(node.getRawSignature());
+							s.refreshNodeReplacements();
 						}
+						declarationMatch.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
 						System.out.println("-----");
 					}
 				}
@@ -227,6 +230,23 @@ public class SearchAlgorithm {
 			}
 		}
 		return true;
+	}
+
+	private static IASTNode replaceNodes(IASTNode node, Map<IASTNode, IASTNode> nodeReplacements) {
+		for (IASTNode key : nodeReplacements.keySet()) {
+			if (key == node) {
+				return nodeReplacements.remove(key);
+			}
+		}
+		for (IASTNode child : node.getChildren()) {
+			if (nodeReplacements.containsKey(child)) {
+				if (node instanceof IASTAmbiguityParent) {
+					((IASTAmbiguityParent) node).replace(child, nodeReplacements.remove(child));
+				}
+				child = replaceNodes(child, nodeReplacements);
+			}
+		}
+		return node;
 	}
 
 	private static TTlRule ruleApplicable(List<IASTNode> selectedNodeAsList) throws Exception {

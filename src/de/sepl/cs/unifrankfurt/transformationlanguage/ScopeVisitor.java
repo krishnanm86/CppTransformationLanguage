@@ -1,5 +1,6 @@
 package de.sepl.cs.unifrankfurt.transformationlanguage;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -17,6 +18,7 @@ public class ScopeVisitor extends ASTVisitor {
 
 	Scope scope;
 	private ASTRewrite astRewrite;
+	Map<IASTNode, IASTNode> nodeReplacements;
 
 	public ASTRewrite getAstRewrite() {
 		return astRewrite;
@@ -29,6 +31,7 @@ public class ScopeVisitor extends ASTVisitor {
 	public ScopeVisitor(Scope scope, ASTRewrite astRewrite) {
 		this.scope = scope;
 		this.astRewrite = astRewrite;
+		nodeReplacements = new HashMap<IASTNode, IASTNode>();
 		shouldVisitDeclarations = true;
 		shouldVisitStatements = true;
 		shouldVisitExpressions = true;
@@ -65,6 +68,7 @@ public class ScopeVisitor extends ASTVisitor {
 					if (holeMap.size() > 0) {
 						TTLUtils.printHoleMap(holeMap);
 						System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
+						nodeReplacements.put(node, TTLUtils.construct(holeMap, ttlConstructExpression));
 						for (String tagKey : r.tagUpdates.keySet()) {
 							if (scope.tagValueMap.containsKey(tagKey)) {
 								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdates.get(tagKey))) {
@@ -81,6 +85,10 @@ public class ScopeVisitor extends ASTVisitor {
 				}
 			}
 		}
+	}
+
+	public void refreshNodeReplacements() {
+		nodeReplacements = new HashMap<IASTNode, IASTNode>();
 	}
 
 }
