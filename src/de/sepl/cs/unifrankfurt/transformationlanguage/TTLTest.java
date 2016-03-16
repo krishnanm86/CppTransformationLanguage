@@ -28,15 +28,15 @@ public class TTLTest {
 		// {__ttla__; }"));
 		// ASTPrinter.print(TTLUtils.getExpression("a[__ttla__]"));
 
-		/*TTlExpression ttlPattern = new TTlExpression("int __ttltype__ = __ttlrhs__;", NodeType.Statement);
-		TTlExpression ttlConstructExpression = new TTlExpression("int __ttltype___v = __ttlrhs__;",
-				NodeType.Statement);
+		TTlExpression ttlPattern = new TTlExpression("std::sqrt(__ttlexpr__ * __ttlexpr2__)", NodeType.Expression);
+		TTlExpression ttlConstructExpression = new TTlExpression("vc::sqrt(__ttlexpr__)",
+				NodeType.Expression);
 
-		TTlExpression ttlFragmentToMatch = new TTlExpression("int temp = aobj[i].x; ", NodeType.Statement);
+		TTlExpression ttlFragmentToMatch = new TTlExpression("std::sqrt((x + y) * y)", NodeType.Expression);
 		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 		TTLUtils.printHoleMap(holeMap);
 		System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
-*/
+
 		/*
 		 * Map<Pair<String, String>, TypeMigration> varMigrations = new
 		 * HashMap<Pair<String, String>, TypeMigration>(); Map<Pair<String,

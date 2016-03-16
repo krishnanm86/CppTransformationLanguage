@@ -77,6 +77,19 @@ public class VCSpecs {
 				arrayindextagUpdate);
 		forScopeRules.add(arrayindexrule);
 
+		
+		Map<String, String> sqrttagUpdate = new HashMap<String, String>();
+		String lhssqrt = "std::sqrt(__ttlsqrtexpr1__ + __ttlsqrtexpr2__)";
+		String rhssqrt = "vc::sqrt(__ttlsqrtexpr1__ + __ttlsqrtexpr2__)";
+		ScopeRule sqrtRule = new ScopeRule(lhssqrt, rhssqrt, NodeType.Expression, sqrttagUpdate);
+		forScopeRules.add(sqrtRule);
+		
+		Map<String, String> tantagUpdate = new HashMap<String, String>();
+		String lhstan = "std::atan2(__ttlsqrtexpr1__, __ttlsqrtexpr2__)";
+		String rhstan = "vc::atan2(__ttlsqrtexpr1__,__ttlsqrtexpr2__)";
+		ScopeRule tanRule = new ScopeRule(lhstan, rhstan, NodeType.Expression, tantagUpdate);
+		forScopeRules.add(tanRule);
+		
 		Map<String, String> forTagValueMap = new HashMap<String, String>();
 		Scope forScope = new Scope(forScopeRules, forTagValueMap);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();

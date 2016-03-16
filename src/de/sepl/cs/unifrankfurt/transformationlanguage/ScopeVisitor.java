@@ -11,6 +11,7 @@ import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFunctionCallExpression;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
@@ -73,6 +74,10 @@ public class ScopeVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTExpression expression) {
+		if(expression instanceof CPPASTFunctionCallExpression)
+		{
+			System.out.println();
+		}
 		if (expression instanceof CPPASTFieldReference) {
 			try {
 				if (!SearchAlgorithm.migrations.getMigratedName(expression.getRawSignature())
@@ -103,24 +108,22 @@ public class ScopeVisitor extends ASTVisitor {
 	private void applyRule(IASTNode node, NodeType type) {
 		for (ScopeRule r : scope.rules) {
 			if (r.type == type) {
+				System.out.println("Applying rule " + r.lhs + " to  " + node.getRawSignature());
 				TTlExpression ttlPattern = new TTlExpression(r.lhs, type);
 				TTlExpression ttlConstructExpression = new TTlExpression(r.Rhs, type);
 				TTlExpression ttlFragmentToMatch = new TTlExpression(node.getRawSignature(), type);
 				Map<String, List<IASTNode>> holeMap = null;
 				try {
-					System.out.println("Applying Scope Rule");
 					holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 					if (holeMap.size() > 0) {
 						TTLUtils.printHoleMap(holeMap);
-						// nodeReplacements.put(node,
-						// TTLUtils.construct(holeMap, ttlConstructExpression));
+						scope.tagValueMap.put(node.getRawSignature(),
+								TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
 						if (r.tagUpdate != null) {
 							for (WhereCondition whereClaus : r.tagUpdate.whereClauses) {
 								whereClaus.setHoleMap(holeMap);
 							}
 							r.tagUpdate.setTagValue();
-							scope.tagValueMap.put(node.getRawSignature(),
-									TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
 							String tagKey = r.tagUpdate.tagname;
 							if (scope.tagValueMap.containsKey(tagKey)) {
 								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdate.tagvalue)) {

@@ -418,8 +418,11 @@ public class TTLUtils {
 		String compilableStr = "void fn(){" + str + ";}";
 		IASTTranslationUnit tu = parse(compilableStr).copy();
 		CPPASTFunctionDefinition defn = (CPPASTFunctionDefinition) tu.getChildren()[0];
-		return ((CPPASTExpressionStatement) ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0])
-				.getExpression();
+		if (((CPPASTCompoundStatement) defn.getBody()).getStatements()[0] instanceof CPPASTExpressionStatement) {
+			return ((CPPASTExpressionStatement) ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0])
+					.getExpression();
+		}
+		return null;
 	}
 
 	public static IASTStatement getStatement(String str) throws Exception {
