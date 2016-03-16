@@ -10,6 +10,7 @@ public class TTlRule {
 	Map<Scope, String> scopeFragmentMap;
 	Map<Tag, String> tagValueMap;
 
+
 	public TTlRule(TTlExpression lhs, TTlExpression rhs, NodeType type) throws Exception {
 		if ((lhs.type == type) && (lhs.type == rhs.type)) {
 			this.type = type;

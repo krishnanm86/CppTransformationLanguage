@@ -5,9 +5,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.eclipse.cdt.core.dom.ast.IASTBinaryExpression;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.parser.util.ASTPrinter;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTBinaryExpression;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
@@ -24,11 +26,10 @@ public class TTLTest {
 		 * ttlFragmentToMatch));
 		 */
 
-		// ASTPrinter.print(TTLUtils.getStatement("for(int i = 0 ; i < 10; i++ )
-		// {__ttla__; }"));
-		// ASTPrinter.print(TTLUtils.getExpression("a[__ttla__]"));
-
-		TTlExpression ttlPattern = new TTlExpression("std::sqrt(__ttlexpr__ * __ttlexpr2__)", NodeType.Expression);
+		 CPPASTBinaryExpression expr = (CPPASTBinaryExpression) TTLUtils.getExpression("a + b");
+		 System.out.println(IASTBinaryExpression.op_assign);
+		 System.out.println(expr.getOperator());
+		/*TTlExpression ttlPattern = new TTlExpression("std::sqrt(__ttlexpr__ * __ttlexpr2__)", NodeType.Expression);
 		TTlExpression ttlConstructExpression = new TTlExpression("vc::sqrt(__ttlexpr__)",
 				NodeType.Expression);
 
@@ -36,7 +37,7 @@ public class TTLTest {
 		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 		TTLUtils.printHoleMap(holeMap);
 		System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
-
+*/
 		/*
 		 * Map<Pair<String, String>, TypeMigration> varMigrations = new
 		 * HashMap<Pair<String, String>, TypeMigration>(); Map<Pair<String,

@@ -28,7 +28,6 @@ public class TransformationUtils {
 
 	public static List<IASTNode> getUses(IASTName objectRef, IASTTranslationUnit ast) {
 		ArrayList<IASTNode> uses = new ArrayList<IASTNode>();
-
 		IBinding binding = objectRef.getBinding();
 		if (binding instanceof CPPVariable) {
 			for (IASTName name : ast.getReferences(binding)) {

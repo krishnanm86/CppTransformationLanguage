@@ -11,5 +11,9 @@ public class Scope {
 	}
 
 	List<ScopeRule> rules;
-	Map<String, String> tagValueMap;
+	Map<String, String> tagValueMap, referenceMap;
+
+	public void setReferenceMap(Map<String, String> referenceMap) {
+		this.referenceMap = referenceMap;
+	}
 }

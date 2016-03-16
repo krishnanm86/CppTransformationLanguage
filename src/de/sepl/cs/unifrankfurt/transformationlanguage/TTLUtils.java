@@ -487,4 +487,20 @@ public class TTLUtils {
 		return false;
 	}
 
+	public static IASTNode construct(Map<String, List<IASTNode>> holeMap, TTlExpression expr,
+			Map<String, String> tagValueMap, Map<String, String> referenceMap) throws Exception {
+		Set<String> holes = getHoles(expr.nodeWithHoles);
+		for (String hole : holes) {
+			expr.nodeWithHoles = expr.nodeWithHoles.replace(hole, getNodeWithHoles(holeMap.get(hole)));
+		}
+		System.out.println(expr.nodeWithHoles);
+		for (String tag : tagValueMap.keySet()) {
+			expr.nodeWithHoles = expr.nodeWithHoles.replace(tag, tagValueMap.get(tag));
+		}
+		for (String tag : referenceMap.keySet()) {
+			expr.nodeWithHoles = expr.nodeWithHoles.replace(tag, referenceMap.get(tag));
+		}
+		return getNodeFromString(expr.nodeWithHoles, expr.type);
+	}
+
 }

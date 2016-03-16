@@ -30,11 +30,11 @@ import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 @SuppressWarnings("restriction")
 public class SearchAlgorithm {
 
-	private static final Map<List<IASTNode>, TTlRule> AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
+	public static final Map<List<IASTNode>, TTlRule> AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 	private static Set<TTlRule> rules = new HashSet<TTlRule>();
 	private static Queue<IASTNode> workQueue = new LinkedList<IASTNode>();
 	private static NameVisitor visitor = new NameVisitor();
-	private static IASTTranslationUnit ast;
+	public static IASTTranslationUnit ast;
 	private static ASTRewrite astRewrite;
 	public static Migrations migrations = new Migrations();
 
@@ -121,7 +121,7 @@ public class SearchAlgorithm {
 		return false;
 	}
 
-	private static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) throws Exception {
+	public static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) throws Exception {
 		// TODO: Make rule apply properly and perform the transformation
 		System.out.println("applying rule to ");
 		for (IASTNode node : selectedNodeAsList) {
@@ -141,9 +141,13 @@ public class SearchAlgorithm {
 						for (IASTNode node : scopeMatches) {
 							node.accept(s);
 							scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
-							for (String key : s.referenceReplacements.keySet()) {
-								scope.tagValueMap.put(key, s.referenceReplacements.get(key));
-							}
+							scope.setReferenceMap(s.referenceReplacements);
+							/*
+							 * for (String key :
+							 * s.referenceReplacements.keySet()) {
+							 * scope.tagValueMap.put(key,
+							 * s.referenceReplacements.get(key)); }
+							 */
 							s.refreshNodeReplacements();
 						}
 						holeMap.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
@@ -154,7 +158,11 @@ public class SearchAlgorithm {
 			IASTNode nodeToReplace = null;
 			for (Scope s : rule.scopeFragmentMap.keySet()) {
 				if (!s.tagValueMap.isEmpty()) {
-					nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap);
+					if (!s.referenceMap.isEmpty()) {
+						nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap, s.referenceMap);
+					} else {
+						nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap);
+					}
 				}
 			}
 			if (nodeToReplace == null) {
@@ -318,7 +326,7 @@ public class SearchAlgorithm {
 		return node;
 	}
 
-	private static TTlRule ruleApplicable(List<IASTNode> selectedNodeAsList) throws Exception {
+	public static TTlRule ruleApplicable(List<IASTNode> selectedNodeAsList) throws Exception {
 		if (selectedNodeAsList.size() == 1) {
 			return ruleApplicableSingleNode(selectedNodeAsList.get(0));
 		} else {
