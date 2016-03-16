@@ -17,7 +17,7 @@ public class VCSpecs {
 		TTlExpression ttlPattern = new TTlExpression(
 				"for(int i = 0 ; i < __ttllimit__; __ttli__++ ) {__ttlforbody__;  }", NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(
-				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/float_v::size; __ttli__++ ) {__ttlforbody__;  }",
+				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/__tagttlvctypeloop__::size; __ttli__++ ) {__ttlforbody__;  }",
 				NodeType.Statement);
 
 		TTlExpression ttlPattern1 = new TTlExpression(
@@ -47,6 +47,35 @@ public class VCSpecs {
 
 	private static Map<Scope, String> getScopeFragmentMapForStatement() {
 		List<ScopeRule> forScopeRules = new ArrayList<ScopeRule>();
+
+		Map<String, String> inttagUpdates = new HashMap<String, String>();
+		inttagUpdates.put("__tagttlvctypeloop__", "int_v");
+		String lhs = "int __ttltype__";
+		String rhs = inttagUpdates.get("__tagttlvctypeloop__") + "   __ttltype__";
+		ScopeRule intRule = new ScopeRule(lhs, rhs, NodeType.Declaration, inttagUpdates);
+		forScopeRules.add(intRule);
+
+		Map<String, String> floattagUpdate = new HashMap<String, String>();
+		floattagUpdate.put("__tagttlvctypeloop__", "float_v");
+		String lhsfloat = "float __ttltype__";
+		String rhsfloat = floattagUpdate.get("__tagttlvctypeloop__") + "   __ttltype__ ";
+		ScopeRule floatRule = new ScopeRule(lhsfloat, rhsfloat, NodeType.Declaration, floattagUpdate);
+		forScopeRules.add(floatRule);
+
+		WhereCondition whereConditionInt = new WhereCondition(
+				"decltype(__ttlvarname__[__ttlindex__].__ttlfieldname__) == int", "int_v");
+		WhereCondition whereConditionFloat = new WhereCondition(
+				"decltype(__ttlvarname__[__ttlindex__].__ttlfieldname__) == float", "float_v");
+		List<WhereCondition> whereConditions = new ArrayList<WhereCondition>();
+		whereConditions.add(whereConditionInt);
+		whereConditions.add(whereConditionFloat);
+		TagUpdate arrayindextagUpdate = new TagUpdate("__tagttlvctypeloop__", whereConditions);
+
+		String lhsarrayindex = "__ttlvarname__[__ttlindex__].__ttlfieldname__";
+		String rhsarrayindex = "__ttlvarname__[__ttlindex__].__ttlfieldname__";
+		ScopeRule arrayindexrule = new ScopeRule(lhsarrayindex, rhsarrayindex, NodeType.Expression,
+				arrayindextagUpdate);
+		forScopeRules.add(arrayindexrule);
 
 		Map<String, String> forTagValueMap = new HashMap<String, String>();
 		Scope forScope = new Scope(forScopeRules, forTagValueMap);

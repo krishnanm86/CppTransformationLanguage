@@ -80,15 +80,17 @@ public class ScopeVisitor extends ASTVisitor {
 					String migratedExpression = SearchAlgorithm.migrations
 							.getMigratedName(expression.getRawSignature());
 					referenceReplacements.put(expression.getRawSignature(), migratedExpression);
-					System.out.println(
-							"Migrating " + expression.getRawSignature() + " to " + migratedExpression);
+					System.out.println("Migrating " + expression.getRawSignature() + " to " + migratedExpression);
+
 				}
+				applyRule(expression, NodeType.Expression);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		} else {
 			applyRule(expression, NodeType.Expression);
 		}
+
 		return super.visit(expression);
 	}
 
@@ -110,15 +112,35 @@ public class ScopeVisitor extends ASTVisitor {
 					holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 					if (holeMap.size() > 0) {
 						TTLUtils.printHoleMap(holeMap);
-						System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
-						nodeReplacements.put(node, TTLUtils.construct(holeMap, ttlConstructExpression));
-						for (String tagKey : r.tagUpdates.keySet()) {
+						// nodeReplacements.put(node,
+						// TTLUtils.construct(holeMap, ttlConstructExpression));
+						if (r.tagUpdate != null) {
+							for (WhereCondition whereClaus : r.tagUpdate.whereClauses) {
+								whereClaus.setHoleMap(holeMap);
+							}
+							r.tagUpdate.setTagValue();
+							scope.tagValueMap.put(node.getRawSignature(),
+									TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
+							String tagKey = r.tagUpdate.tagname;
 							if (scope.tagValueMap.containsKey(tagKey)) {
-								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdates.get(tagKey))) {
+								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdate.tagvalue)) {
 									scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
 								}
 							} else {
-								scope.tagValueMap.put(tagKey, r.tagUpdates.get(tagKey));
+								scope.tagValueMap.put(tagKey, r.tagUpdate.tagvalue);
+							}
+
+						} else {
+							scope.tagValueMap.put(node.getRawSignature(),
+									TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
+							for (String tagKey : r.tagUpdates.keySet()) {
+								if (scope.tagValueMap.containsKey(tagKey)) {
+									if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdates.get(tagKey))) {
+										scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
+									}
+								} else {
+									scope.tagValueMap.put(tagKey, r.tagUpdates.get(tagKey));
+								}
 							}
 						}
 					}

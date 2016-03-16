@@ -28,28 +28,25 @@ public class TTLTest {
 		// {__ttla__; }"));
 		// ASTPrinter.print(TTLUtils.getExpression("a[__ttla__]"));
 
+		/*TTlExpression ttlPattern = new TTlExpression("int __ttltype__ = __ttlrhs__;", NodeType.Statement);
+		TTlExpression ttlConstructExpression = new TTlExpression("int __ttltype___v = __ttlrhs__;",
+				NodeType.Statement);
+
+		TTlExpression ttlFragmentToMatch = new TTlExpression("int temp = aobj[i].x; ", NodeType.Statement);
+		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
+		TTLUtils.printHoleMap(holeMap);
+		System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
+*/
 		/*
-		 * TTlExpression ttlPattern = new TTlExpression(
-		 * "struct __ttlstructname__ {  __ttlstructbody__; }",
-		 * NodeType.DeclSpecifier); TTlExpression ttlConstructExpression = new
-		 * TTlExpression( "struct __ttlstructname___v {  __ttlstructbody__; }",
-		 * NodeType.DeclSpecifier);
-		 * 
-		 * TTlExpression ttlFragmentToMatch = new TTlExpression(
-		 * "struct A{ int  a; int b;} ", NodeType.DeclSpecifier); Map<String,
-		 * List<IASTNode>> holeMap = TTLUtils.match(ttlPattern,
-		 * ttlFragmentToMatch); TTLUtils.printHoleMap(holeMap);
-		 * System.out.println(TTLUtils.construct(holeMap,
-		 * ttlConstructExpression).getRawSignature());
+		 * Map<Pair<String, String>, TypeMigration> varMigrations = new
+		 * HashMap<Pair<String, String>, TypeMigration>(); Map<Pair<String,
+		 * String>, Pair<String, String>> fieldMapping = new
+		 * HashMap<Pair<String, String>, Pair<String, String>>();
+		 * fieldMapping.put(Pair.of("int", "a"), Pair.of("int_v", "a_v"));
+		 * TypeMigration typeMigr = new TypeMigration("A", "A_v", fieldMapping);
+		 * varMigrations.put(Pair.of("aobj", "aobj_v"), typeMigr); Migrations
+		 * migr = new Migrations(varMigrations);
 		 */
-
-		Map<Pair<String, String>, TypeMigration> varMigrations = new HashMap<Pair<String, String>, TypeMigration>();
-		Map<Pair<String, String>, Pair<String, String>> fieldMapping = new HashMap<Pair<String, String>, Pair<String, String>>();
-		fieldMapping.put(Pair.of("int", "a"), Pair.of("int_v", "a_v"));
-		TypeMigration typeMigr = new TypeMigration("A", "A_v", fieldMapping);
-		varMigrations.put(Pair.of("aobj", "aobj_v"), typeMigr);
-		Migrations migr = new Migrations(varMigrations);
-
-		System.out.println(migr.getMigratedName("aobj[90].a"));
+		//System.out.println(migr.getMigratedName("aobj[90].a"));
 	}
 }

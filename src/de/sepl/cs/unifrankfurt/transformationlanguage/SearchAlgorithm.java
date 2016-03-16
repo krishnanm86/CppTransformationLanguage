@@ -17,16 +17,12 @@ import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
-import org.eclipse.cdt.core.dom.ast.IASTNode.CopyStyle;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.IASTAmbiguityParent;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTExpressionStatement;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTTranslationUnit;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
@@ -41,7 +37,6 @@ public class SearchAlgorithm {
 	private static IASTTranslationUnit ast;
 	private static ASTRewrite astRewrite;
 	public static Migrations migrations = new Migrations();
-	private static List<IASTNode> migratedReferences = new ArrayList<IASTNode>();
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
 		migrations = new Migrations();
@@ -107,38 +102,9 @@ public class SearchAlgorithm {
 			AppliedRules.put(selectedNodeAsList, rule);
 		}
 		List<IASTNode> dependencies = getDependencies(selectedNodeAsList, true);
-		/*
-		 * List<IASTNode> newDependencies = new ArrayList<IASTNode>(); for
-		 * (IASTNode dependency : dependencies) {
-		 * 
-		 * IASTNode fieldReference = getFieldReference(dependency); if
-		 * (!migratedReferences.contains(fieldReference) && fieldReference !=
-		 * null && fieldReference instanceof CPPASTFieldReference &&
-		 * !(migratedReferences.contains(fieldReference))) { if
-		 * (!migrations.getMigratedName(fieldReference.getRawSignature())
-		 * .equals(fieldReference.getRawSignature())) { IASTNode nodeToReplace =
-		 * TTLUtils .getExpression(migrations.getMigratedName(fieldReference.
-		 * getRawSignature())); IASTNode replacement = nodeToReplace;
-		 * astRewrite.replace(fieldReference, replacement, new TextEditGroup(
-		 * "API Migration")); migratedReferences.add(fieldReference);
-		 * newDependencies.add(replacement); } } else {
-		 * newDependencies.add(dependency); } }
-		 */
 		workQueue.addAll(dependencies);
 		for (IASTNode selectedNode : selectedNodeAsList) {
 			workQueue.remove(selectedNode);
-		}
-	}
-
-	private static IASTNode getFieldReference(IASTNode dependency) {
-		while (!(dependency instanceof CPPASTFieldReference) && !(dependency instanceof CPPASTTranslationUnit)
-				&& dependency != null) {
-			dependency = dependency.getParent();
-		}
-		if (dependency instanceof CPPASTFieldReference) {
-			return dependency;
-		} else {
-			return null;
 		}
 	}
 

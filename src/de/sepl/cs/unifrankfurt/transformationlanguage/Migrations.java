@@ -23,6 +23,38 @@ public class Migrations {
 		this.varMigrations = varMigrations;
 	}
 
+	public String getType(String reference) throws Exception {
+		String type = "";
+		String varName = null, fieldName = null;
+		IASTExpression expr = TTLUtils.getExpression(reference);
+		if (expr instanceof CPPASTFieldReference) {
+			if (((CPPASTFieldReference) expr).getFieldOwner() instanceof CPPASTArraySubscriptExpression) {
+				// Array Subscript case
+				if (((CPPASTArraySubscriptExpression) ((CPPASTFieldReference) expr).getFieldOwner())
+						.getArrayExpression() instanceof CPPASTIdExpression) {
+					varName = ((CPPASTIdExpression) ((CPPASTArraySubscriptExpression) ((CPPASTFieldReference) expr)
+							.getFieldOwner()).getArrayExpression()).getName().toString();
+				}
+			} else if (((CPPASTFieldReference) expr).getFieldOwner() instanceof CPPASTIdExpression) {
+				// Normal field reference case
+				varName = ((CPPASTIdExpression) ((CPPASTFieldReference) expr).getFieldOwner()).getName().toString();
+			}
+			fieldName = ((CPPASTFieldReference) expr).getFieldName().toString();
+		}
+
+		for (Pair<String, String> pair : varMigrations.keySet()) {
+			if (pair.getLeft().equals(varName)) {
+				TypeMigration typeMigration = varMigrations.get(pair);
+				for (Pair<String, String> fieldPair : typeMigration.fieldMapping.keySet()) {
+					if (fieldPair.getRight().equals(fieldName)) {
+						return fieldPair.getLeft();
+					}
+				}
+			}
+		}
+		return type;
+	}
+
 	public String getMigratedName(String oldName) throws Exception {
 		String varName = null, fieldName = null;
 		IASTExpression expr = TTLUtils.getExpression(oldName);
@@ -61,7 +93,5 @@ public class Migrations {
 	public String toString() {
 		return "Migrations [varMigrations=" + varMigrations + "]";
 	}
-	
-	
 
 }
