@@ -25,15 +25,19 @@ public class VCSpecs {
 		TTlExpression ttlConstructExpression1 = new TTlExpression(
 				"struct __ttlstructname___v { __ttlstructbody__; } __ttlaobj___v[__ttllimit__/__tagttlvctype__::size];",
 				NodeType.DeclDefn);
-		Map<Scope, String> scopeFragMentMap1 = null;
-		Map<Tag, String> tagValueMap1 = null;
 
 		rules.add(new TTlRule(ttlPattern1, ttlConstructExpression1, NodeType.DeclDefn, getScopeFragMentMapStruct(),
 				getTagValueMapStruct()));
 
-		rules.add(new TTlRule(ttlPattern, ttlConstructExpression, NodeType.Statement, scopeFragMentMap1, tagValueMap1));
+		rules.add(new TTlRule(ttlPattern, ttlConstructExpression, NodeType.Statement, getScopeFragmentMapForStatement(),
+				getTagValueMapFor()));
 
 		return rules;
+	}
+
+	private static Map<Tag, String> getTagValueMapFor() {
+		Map<Tag, String> tagValueMap = new HashMap<Tag, String>();
+		return tagValueMap;
 	}
 
 	private static Map<Tag, String> getTagValueMapStruct() {
@@ -44,11 +48,10 @@ public class VCSpecs {
 	private static Map<Scope, String> getScopeFragmentMapForStatement() {
 		List<ScopeRule> forScopeRules = new ArrayList<ScopeRule>();
 
-		
 		Map<String, String> forTagValueMap = new HashMap<String, String>();
 		Scope forScope = new Scope(forScopeRules, forTagValueMap);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();
-		scopeFragMentMap.put(forScope, "__ttlloopbody__");
+		scopeFragMentMap.put(forScope, "__ttlforbody__");
 		return scopeFragMentMap;
 	}
 

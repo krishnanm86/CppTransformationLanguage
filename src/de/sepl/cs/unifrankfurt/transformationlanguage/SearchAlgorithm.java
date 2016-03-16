@@ -17,14 +17,16 @@ import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
+import org.eclipse.cdt.core.dom.ast.IASTNode.CopyStyle;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.IASTAmbiguityParent;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTExpressionStatement;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
-import org.eclipse.cdt.internal.ui.refactoring.ModificationCollector;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTTranslationUnit;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
@@ -38,14 +40,12 @@ public class SearchAlgorithm {
 	private static NameVisitor visitor = new NameVisitor();
 	private static IASTTranslationUnit ast;
 	private static ASTRewrite astRewrite;
-	private static ModificationCollector collector;
-	private static Migrations migrations = new Migrations();
+	public static Migrations migrations = new Migrations();
+	private static List<IASTNode> migratedReferences = new ArrayList<IASTNode>();
 
-	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite,
-			ModificationCollector collector) throws Exception {
+	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
 		migrations = new Migrations();
 		SearchAlgorithm.ast = ast;
-		SearchAlgorithm.collector = collector;
 		SearchAlgorithm.astRewrite = astRewrite;
 		rules = VCSpecs.populateRules();
 		visitor = new NameVisitor();
@@ -106,9 +106,39 @@ public class SearchAlgorithm {
 		if (applyRule(rule, selectedNodeAsList) && rule != null) {
 			AppliedRules.put(selectedNodeAsList, rule);
 		}
-		workQueue.addAll(getDependencies(selectedNodeAsList, true));
+		List<IASTNode> dependencies = getDependencies(selectedNodeAsList, true);
+		/*
+		 * List<IASTNode> newDependencies = new ArrayList<IASTNode>(); for
+		 * (IASTNode dependency : dependencies) {
+		 * 
+		 * IASTNode fieldReference = getFieldReference(dependency); if
+		 * (!migratedReferences.contains(fieldReference) && fieldReference !=
+		 * null && fieldReference instanceof CPPASTFieldReference &&
+		 * !(migratedReferences.contains(fieldReference))) { if
+		 * (!migrations.getMigratedName(fieldReference.getRawSignature())
+		 * .equals(fieldReference.getRawSignature())) { IASTNode nodeToReplace =
+		 * TTLUtils .getExpression(migrations.getMigratedName(fieldReference.
+		 * getRawSignature())); IASTNode replacement = nodeToReplace;
+		 * astRewrite.replace(fieldReference, replacement, new TextEditGroup(
+		 * "API Migration")); migratedReferences.add(fieldReference);
+		 * newDependencies.add(replacement); } } else {
+		 * newDependencies.add(dependency); } }
+		 */
+		workQueue.addAll(dependencies);
 		for (IASTNode selectedNode : selectedNodeAsList) {
 			workQueue.remove(selectedNode);
+		}
+	}
+
+	private static IASTNode getFieldReference(IASTNode dependency) {
+		while (!(dependency instanceof CPPASTFieldReference) && !(dependency instanceof CPPASTTranslationUnit)
+				&& dependency != null) {
+			dependency = dependency.getParent();
+		}
+		if (dependency instanceof CPPASTFieldReference) {
+			return dependency;
+		} else {
+			return null;
 		}
 	}
 
@@ -136,8 +166,34 @@ public class SearchAlgorithm {
 			TTlExpression ttlFragmentToMatch = new TTlExpression(selectedNodeAsList.get(0).getRawSignature(),
 					rule.type);
 			Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
+			if (rule.scopeFragmentMap != null && rule.tagValueMap != null) {
+				for (Scope scope : rule.scopeFragmentMap.keySet()) {
+					ScopeVisitor s = new ScopeVisitor(scope, astRewrite);
+					if (holeMap.get(rule.scopeFragmentMap.get(scope)) != null) {
+						List<IASTNode> scopeMatches = holeMap.get(rule.scopeFragmentMap.get(scope));
+						List<IASTNode> scopeMatchesNew = new ArrayList<IASTNode>();
+						for (IASTNode node : scopeMatches) {
+							node.accept(s);
+							scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
+							for (String key : s.referenceReplacements.keySet()) {
+								scope.tagValueMap.put(key, s.referenceReplacements.get(key));
+							}
+							s.refreshNodeReplacements();
+						}
+						holeMap.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
+					}
+				}
+			}
 			TTlExpression ttlConstructExpression = rule.rhs;
-			IASTNode nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
+			IASTNode nodeToReplace = null;
+			for (Scope s : rule.scopeFragmentMap.keySet()) {
+				if (!s.tagValueMap.isEmpty()) {
+					nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap);
+				}
+			}
+			if (nodeToReplace == null) {
+				nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
+			}
 			astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new TextEditGroup("API Migration"));
 		} else if (rule != null && rule.type == NodeType.DeclDefn) {
 			String ruleLhsString = rule.lhs.nodeWithHoles;
@@ -279,13 +335,16 @@ public class SearchAlgorithm {
 	private static IASTNode replaceNodes(IASTNode node, Map<IASTNode, IASTNode> nodeReplacements) {
 		for (IASTNode key : nodeReplacements.keySet()) {
 			if (key == node) {
-				return nodeReplacements.remove(key);
+				IASTNode replacement = nodeReplacements.remove(key);
+				return replacement;
 			}
 		}
 		for (IASTNode child : node.getChildren()) {
 			if (nodeReplacements.containsKey(child)) {
 				if (node instanceof IASTAmbiguityParent) {
-					((IASTAmbiguityParent) node).replace(child, nodeReplacements.remove(child));
+					IASTNode replacement = nodeReplacements.get(child);
+					((IASTAmbiguityParent) node).replace(child, replacement);
+					nodeReplacements.remove(child);
 				}
 				child = replaceNodes(child, nodeReplacements);
 			}

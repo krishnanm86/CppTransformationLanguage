@@ -10,18 +10,45 @@ import org.eclipse.cdt.core.dom.ast.IASTExpression;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
+@SuppressWarnings("restriction")
 public class ScopeVisitor extends ASTVisitor {
 
 	Scope scope;
 	private ASTRewrite astRewrite;
 	Map<IASTNode, IASTNode> nodeReplacements;
+	Map<String, String> referenceReplacements;
 
 	public ASTRewrite getAstRewrite() {
 		return astRewrite;
+	}
+
+	public Scope getScope() {
+		return scope;
+	}
+
+	public void setScope(Scope scope) {
+		this.scope = scope;
+	}
+
+	public Map<IASTNode, IASTNode> getNodeReplacements() {
+		return nodeReplacements;
+	}
+
+	public void setNodeReplacements(Map<IASTNode, IASTNode> nodeReplacements) {
+		this.nodeReplacements = nodeReplacements;
+	}
+
+	public Map<String, String> getReferenceReplacements() {
+		return referenceReplacements;
+	}
+
+	public void setReferenceReplacements(Map<String, String> referenceReplacements) {
+		this.referenceReplacements = referenceReplacements;
 	}
 
 	public void setAstRewrite(ASTRewrite astRewrite) {
@@ -32,6 +59,7 @@ public class ScopeVisitor extends ASTVisitor {
 		this.scope = scope;
 		this.astRewrite = astRewrite;
 		nodeReplacements = new HashMap<IASTNode, IASTNode>();
+		referenceReplacements = new HashMap<String, String>();
 		shouldVisitDeclarations = true;
 		shouldVisitStatements = true;
 		shouldVisitExpressions = true;
@@ -45,7 +73,22 @@ public class ScopeVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTExpression expression) {
-		applyRule(expression, NodeType.Expression);
+		if (expression instanceof CPPASTFieldReference) {
+			try {
+				if (!SearchAlgorithm.migrations.getMigratedName(expression.getRawSignature())
+						.equals(expression.getRawSignature())) {
+					String migratedExpression = SearchAlgorithm.migrations
+							.getMigratedName(expression.getRawSignature());
+					referenceReplacements.put(expression.getRawSignature(), migratedExpression);
+					System.out.println(
+							"Migrating " + expression.getRawSignature() + " to " + migratedExpression);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		} else {
+			applyRule(expression, NodeType.Expression);
+		}
 		return super.visit(expression);
 	}
 

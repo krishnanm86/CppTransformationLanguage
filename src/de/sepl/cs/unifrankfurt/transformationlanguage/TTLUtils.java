@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Set;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
-import org.eclipse.cdt.core.dom.ast.ASTNodeFactoryFactory;
 import org.eclipse.cdt.core.dom.ast.IASTArrayDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
@@ -28,7 +27,6 @@ import org.eclipse.cdt.core.dom.ast.IASTNode.CopyStyle;
 import org.eclipse.cdt.core.dom.ast.IASTProblem;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
-import org.eclipse.cdt.core.dom.ast.cpp.ICPPNodeFactory;
 import org.eclipse.cdt.core.dom.parser.IScannerExtensionConfiguration;
 import org.eclipse.cdt.core.dom.parser.ISourceCodeParser;
 import org.eclipse.cdt.core.dom.parser.c.GCCScannerExtensionConfiguration;
@@ -45,23 +43,17 @@ import org.eclipse.cdt.core.parser.ParserLanguage;
 import org.eclipse.cdt.core.parser.ParserMode;
 import org.eclipse.cdt.core.parser.ScannerInfo;
 import org.eclipse.cdt.core.parser.util.ASTPrinter;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompoundStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTDeclarationStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTExpressionStatement;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFunctionCallExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFunctionDefinition;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTIdExpression;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTUsingDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.GNUCPPSourceParser;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.CPPVisitor;
-import org.eclipse.cdt.internal.core.dom.rewrite.astwriter.StatementWriter;
 import org.eclipse.cdt.internal.core.parser.scanner.CPreprocessor;
 
-import de.sepl.cs.unifrankfurt.transformationlanguage.TTLUtils.TTLHoleType;
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
 @SuppressWarnings("restriction")
@@ -73,33 +65,6 @@ public class TTLUtils {
 
 	private final static String ttlHolePrefix = "__ttl";
 	private final static String ttlHoleSuffix = "__";
-
-	private static ICPPNodeFactory nodeFactory = ASTNodeFactoryFactory.getDefaultCPPNodeFactory();
-
-	public static CPPASTCompositeTypeSpecifier transformTypeUsingFilter(CPPASTCompositeTypeSpecifier type,
-			Map<String, String> filter) {
-		CPPASTCompositeTypeSpecifier newType = type.copy();
-		for (IASTDeclaration member : newType.getMembers()) {
-			if (member instanceof CPPASTSimpleDeclaration) {
-				CPPASTSimpleDeclaration memberDeclaration = (CPPASTSimpleDeclaration) member;
-				if (memberDeclaration.getDeclSpecifier() instanceof CPPASTSimpleDeclSpecifier) {
-					CPPASTSimpleDeclSpecifier memberSpecifier = (CPPASTSimpleDeclSpecifier) memberDeclaration
-							.getDeclSpecifier();
-					String declSpecifierName = memberSpecifier.toString().trim();
-					if (filter.containsKey(declSpecifierName)) {
-						CPPASTNamedTypeSpecifier newSpecifier = (CPPASTNamedTypeSpecifier) nodeFactory
-								.newTypedefNameSpecifier(
-										nodeFactory.newName(filter.get(declSpecifierName).toCharArray()));
-						CPPASTSimpleDeclaration newMemberDeclaration = memberDeclaration.copy();
-						newMemberDeclaration.setDeclSpecifier(newSpecifier);
-						newType.replace(member, newMemberDeclaration);
-					}
-				}
-			}
-
-		}
-		return newType;
-	}
 
 	public static Map<String, List<IASTNode>> match(TTlExpression ttlPattern, TTlExpression ttlFragmentToMatch)
 			throws Exception {
@@ -451,7 +416,7 @@ public class TTLUtils {
 
 	public static IASTExpression getExpression(String str) throws Exception {
 		String compilableStr = "void fn(){" + str + ";}";
-		IASTTranslationUnit tu = parse(compilableStr);
+		IASTTranslationUnit tu = parse(compilableStr).copy();
 		CPPASTFunctionDefinition defn = (CPPASTFunctionDefinition) tu.getChildren()[0];
 		return ((CPPASTExpressionStatement) ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0])
 				.getExpression();
