@@ -16,6 +16,7 @@ import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
+import org.eclipse.cdt.core.dom.ast.IASTEqualsInitializer;
 import org.eclipse.cdt.core.dom.ast.IASTExpression;
 import org.eclipse.cdt.core.dom.ast.IASTExpressionStatement;
 import org.eclipse.cdt.core.dom.ast.IASTFunctionCallExpression;
@@ -49,6 +50,7 @@ import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTExpressionStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFunctionDefinition;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTIdExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTStaticAssertionDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTUsingDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.GNUCPPSourceParser;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.semantics.CPPVisitor;
@@ -72,9 +74,41 @@ public class TTLUtils {
 		IASTNode patternNode = null, matchNode = null;
 		patternNode = getNodeFromString(ttlPattern.nodeWithHoles, ttlPattern.type);
 		matchNode = getNodeFromString(ttlFragmentToMatch.nodeWithHoles, ttlFragmentToMatch.type);
+		if (isDeclarationAssignment(ttlPattern.nodeWithHoles, ttlFragmentToMatch.nodeWithHoles).size() > 0) {
+			return isDeclarationAssignment(ttlPattern.nodeWithHoles, ttlFragmentToMatch.nodeWithHoles);
+		}
 		if (match(holeMap, patternNode, matchNode))
 			return holeMap;
 		return new HashMap<String, List<IASTNode>>();
+	}
+
+	private static Map<String, List<IASTNode>> isDeclarationAssignment(String nodeWithHoles, String nodeWithHoles2)
+			throws Exception {
+		Map<String, List<IASTNode>> retHoleMap = new HashMap<String, List<IASTNode>>();
+		String[] lhs = nodeWithHoles.split("=");
+		String[] rhs = nodeWithHoles2.split("=");
+		if (lhs.length == 2 && rhs.length == 2) {
+			if (lhs[0].split(" ").length == 2 && rhs[0].split(" ").length == 2) {
+				if (lhs[0].split(" ")[0].equals(rhs[0].split(" ")[0])) {
+					String holeName = lhs[0].split(" ")[1];
+					String holeValue = rhs[0].split(" ")[1];
+					IASTExpression expr = TTLUtils.getExpression(holeValue);
+					if (holeName.startsWith(ttlHolePrefix) && holeName.endsWith(ttlHoleSuffix)) {
+						retHoleMap.put(holeName, new ArrayList<IASTNode>(Arrays.asList(expr)));
+						lhs[1] = lhs[1].replace(";", "");
+						rhs[1] = rhs[1].replace(";", "");
+						lhs[1] = lhs[1].trim();
+						rhs[1] = rhs[1].trim();
+						if (lhs[1].startsWith(ttlHolePrefix) && lhs[1].endsWith(ttlHoleSuffix)) {
+							IASTExpression expr2 = TTLUtils.getExpression(rhs[1]);
+							retHoleMap.put(lhs[1], new ArrayList<IASTNode>(Arrays.asList(expr2)));
+						}
+
+					}
+				}
+			}
+		}
+		return retHoleMap;
 	}
 
 	public static IASTNode getNodeFromString(String node, TTlExpression.NodeType type) throws Exception {
@@ -191,7 +225,13 @@ public class TTLUtils {
 	private static CharSequence getNodeWithHoles(List<IASTNode> list) {
 		String str = "";
 		for (IASTNode node : list) {
-			str = str + node.getRawSignature();
+			if (node instanceof CPPASTCompoundStatement) {
+				for (IASTStatement stat : ((CPPASTCompoundStatement) node).getStatements()) {
+					str = str + stat.getRawSignature();
+				}
+			} else {
+				str = str + node.getRawSignature();
+			}
 		}
 		return str;
 	}
@@ -246,7 +286,7 @@ public class TTLUtils {
 
 	private static boolean isNodeEqual(IASTNode patternNode, IASTNode matchNode) {
 		if (patternNode instanceof IASTCompositeTypeSpecifier || patternNode instanceof IASTNamedTypeSpecifier
-				|| patternNode instanceof IASTArrayDeclarator) {
+				|| patternNode instanceof IASTArrayDeclarator || patternNode instanceof IASTEqualsInitializer) {
 			return true;
 		}
 		Object[] patternNodeDetails = getNameTypeHashCode(patternNode);
@@ -429,6 +469,9 @@ public class TTLUtils {
 		String compilableStr = "void fn(){" + str + "}";
 		IASTTranslationUnit tu = parse(compilableStr);
 		CPPASTFunctionDefinition defn = (CPPASTFunctionDefinition) tu.getChildren()[0];
+		if (((CPPASTCompoundStatement) defn.getBody()).getStatements().length > 0) {
+			return ((CPPASTCompoundStatement) defn.getBody());
+		}
 		return ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0];
 	}
 

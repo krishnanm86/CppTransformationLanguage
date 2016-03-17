@@ -21,8 +21,10 @@ import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.IASTAmbiguityParent;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompoundStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+import org.eclipse.cdt.internal.core.pdom.export.GeneratePDOMApplication;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
@@ -43,6 +45,7 @@ public class SearchAlgorithm {
 		SearchAlgorithm.ast = ast;
 		SearchAlgorithm.astRewrite = astRewrite;
 		rules = VCSpecs.populateRules();
+		//rules = GMPSpecs.populateRules();
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
 		searchBlock(selectedNodeAsList);
@@ -159,7 +162,8 @@ public class SearchAlgorithm {
 			for (Scope s : rule.scopeFragmentMap.keySet()) {
 				if (!s.tagValueMap.isEmpty()) {
 					if (!s.referenceMap.isEmpty()) {
-						nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap, s.referenceMap);
+						nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap,
+								s.referenceMap);
 					} else {
 						nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap);
 					}
@@ -168,7 +172,25 @@ public class SearchAlgorithm {
 			if (nodeToReplace == null) {
 				nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
 			}
-			astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new TextEditGroup("API Migration"));
+			if (nodeToReplace instanceof CPPASTCompoundStatement) {
+				// TODO: HACK here please change appropriately
+				if (((CPPASTCompoundStatement) nodeToReplace).getStatements().length == 2) {
+					astRewrite.replace(selectedNodeAsList.get(0),
+							((CPPASTCompoundStatement) nodeToReplace).getStatements()[1],
+							new TextEditGroup("API Migration"));
+					astRewrite.insertBefore(selectedNodeAsList.get(0).getParent(), selectedNodeAsList.get(0),
+							((CPPASTCompoundStatement) nodeToReplace).getStatements()[0],
+							new TextEditGroup("API Migration"));
+				}
+				if (((CPPASTCompoundStatement) nodeToReplace).getStatements().length == 1) {
+					astRewrite.replace(selectedNodeAsList.get(0),
+							((CPPASTCompoundStatement) nodeToReplace).getStatements()[0],
+							new TextEditGroup("API Migration"));
+				}
+
+			} else {
+				astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new TextEditGroup("API Migration"));
+			}
 		} else if (rule != null && rule.type == NodeType.DeclDefn) {
 			String ruleLhsString = rule.lhs.nodeWithHoles;
 			String strLhs[] = ruleLhsString.split("}");
