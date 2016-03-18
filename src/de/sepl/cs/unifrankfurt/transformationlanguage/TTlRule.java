@@ -9,6 +9,7 @@ public class TTlRule {
 	TTlExpression lhs, rhs;
 	Map<Scope, String> scopeFragmentMap;
 	Map<Tag, String> tagValueMap;
+	PileList pileList;
 
 
 	public TTlRule(TTlExpression lhs, TTlExpression rhs, NodeType type) throws Exception {

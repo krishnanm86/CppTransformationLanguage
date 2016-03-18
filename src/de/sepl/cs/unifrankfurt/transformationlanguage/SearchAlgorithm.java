@@ -15,15 +15,21 @@ import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
+import org.eclipse.cdt.core.dom.ast.IASTExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
+import org.eclipse.cdt.core.dom.ast.IType;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.IASTAmbiguityParent;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompoundStatement;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTIdExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTReturnStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPBasicType;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPVariable;
 import org.eclipse.cdt.internal.core.pdom.export.GeneratePDOMApplication;
 import org.eclipse.text.edits.TextEditGroup;
 
@@ -45,7 +51,7 @@ public class SearchAlgorithm {
 		SearchAlgorithm.ast = ast;
 		SearchAlgorithm.astRewrite = astRewrite;
 		rules = VCSpecs.populateRules();
-		//rules = GMPSpecs.populateRules();
+		// rules = GMPSpecs.populateRules();
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
 		searchBlock(selectedNodeAsList);
@@ -53,6 +59,19 @@ public class SearchAlgorithm {
 	}
 
 	private static void searchBlock(List<IASTNode> selectedNodeAsList) throws Exception {
+		if (selectedNodeAsList.get(0) instanceof CPPASTReturnStatement) {
+			IASTExpression returnExpression = ((CPPASTReturnStatement) selectedNodeAsList.get(0)).getReturnValue();
+			if (returnExpression instanceof CPPASTIdExpression) {
+				IType type = (((CPPVariable) (((CPPASTIdExpression) returnExpression).getName().getBinding()))
+						.getType());
+				System.out.println("Warning " + (((CPPASTIdExpression) returnExpression).getName().toString() + " "
+						+ " returned and type changed "));
+				IASTNode node = (((CPPVariable) (((CPPASTIdExpression) returnExpression).getName().getBinding()))
+						.getDefinition());
+				System.out.println(type.getClass().getName());
+				System.out.println(node.getRawSignature());
+			}
+		}
 		TTlRule rule = ruleApplicable(selectedNodeAsList);
 		if (rule != null) {
 			if (!isNodeHandled(selectedNodeAsList)) {
@@ -104,11 +123,43 @@ public class SearchAlgorithm {
 		if (applyRule(rule, selectedNodeAsList) && rule != null) {
 			AppliedRules.put(selectedNodeAsList, rule);
 		}
-		List<IASTNode> dependencies = getDependencies(selectedNodeAsList, true);
+		List<IASTNode> dependencies;
+		List<IASTName> untouchableNames = new ArrayList<IASTName>();
+		List<IASTExpression> acceptableExpression = new ArrayList<IASTExpression>();
+		if (rule != null && rule.pileList != null) {
+			acceptableExpression = getExpressionsAsNodes(rule.pileList.acceptableExpressions);
+			List<IASTExpression> unacceptableExpression = getExpressionsAsNodes(rule.pileList.unacceptableExpressions);
+			for (IASTExpression expr : unacceptableExpression) {
+				NameVisitor n = new NameVisitor();
+				expr.accept(n);
+				untouchableNames.addAll(n.getNames());
+			}
+		}
+		if (untouchableNames != null && untouchableNames.size() > 0) {
+			dependencies = getDependenciesWithUntouchableNames(selectedNodeAsList, true, untouchableNames);
+		} else {
+			dependencies = getDependencies(selectedNodeAsList, true);
+		}
+		workQueue.addAll(acceptableExpression);
 		workQueue.addAll(dependencies);
 		for (IASTNode selectedNode : selectedNodeAsList) {
 			workQueue.remove(selectedNode);
 		}
+	}
+
+	private static List<IASTExpression> getExpressionsAsNodes(List<String> expressions) {
+		List<IASTExpression> retExpression = new ArrayList<IASTExpression>();
+		for (String str : expressions) {
+			IASTExpression expr = null;
+			try {
+				expr = TTLUtils.getExpression(str);
+			} catch (Exception e) {
+			}
+			if (expr != null) {
+				retExpression.add(expr);
+			}
+		}
+		return retExpression;
 	}
 
 	private static boolean isNodeHandled(List<IASTNode> node) {
@@ -434,6 +485,33 @@ public class SearchAlgorithm {
 				if (!(selectedNode instanceof CPPASTCompositeTypeSpecifier)) {
 					for (IASTName typeref : visitor.getTyperefs()) {
 						if (!visitor.visitedNames.contains(typeref)) {
+							dependencies.add(TransformationUtils.getDefns(typeref));
+							visitor.visitedNames.add(typeref);
+						}
+					}
+				}
+			}
+		}
+		return dependencies;
+	}
+
+	private static List<IASTNode> getDependenciesWithUntouchableNames(List<IASTNode> selectedNodeAsList,
+			boolean addDefns, List<IASTName> untouchableNames) {
+		List<IASTNode> dependencies = new ArrayList<IASTNode>();
+		for (IASTNode selectedNode : selectedNodeAsList) {
+			selectedNode.accept(visitor);
+			for (IASTName objectref : visitor.getObjectrefs()) {
+				if (!visitor.visitedNames.contains(objectref) && !untouchableNames.contains(objectref)) {
+					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
+						dependencies.add(use);
+					}
+					visitor.visitedNames.add(objectref);
+				}
+			}
+			if (addDefns) {
+				if (!(selectedNode instanceof CPPASTCompositeTypeSpecifier)) {
+					for (IASTName typeref : visitor.getTyperefs()) {
+						if (!visitor.visitedNames.contains(typeref) && !untouchableNames.contains(typeref)) {
 							dependencies.add(TransformationUtils.getDefns(typeref));
 							visitor.visitedNames.add(typeref);
 						}

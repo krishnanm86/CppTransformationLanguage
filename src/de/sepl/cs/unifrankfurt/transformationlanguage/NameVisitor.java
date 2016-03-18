@@ -13,16 +13,20 @@ public class NameVisitor extends ASTVisitor {
 
 	private List<IASTName> objectrefs, typerefs;
 	public List<IASTName> visitedNames;
+	public List<IASTName> names; // For the purpose of getting all names from an
+									// expression. Updating piles
 
 	public NameVisitor() {
 		objectrefs = new ArrayList<IASTName>();
 		typerefs = new ArrayList<IASTName>();
 		shouldVisitNames = true;
 		visitedNames = new ArrayList<IASTName>();
+		names = new ArrayList<IASTName>();
 	}
 
 	@Override
 	public int visit(IASTName name) {
+		names.add(name);
 		if (name.getBinding() instanceof CPPClassType) {
 			typerefs.add(name);
 		}
@@ -30,6 +34,10 @@ public class NameVisitor extends ASTVisitor {
 			objectrefs.add(name);
 		}
 		return super.visit(name);
+	}
+
+	public List<IASTName> getNames() {
+		return names;
 	}
 
 	public List<IASTName> getObjectrefs() {

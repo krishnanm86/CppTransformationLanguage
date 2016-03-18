@@ -1,5 +1,6 @@
 package de.sepl.cs.unifrankfurt.transformationlanguage;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,10 +26,20 @@ public class TTLTest {
 		 * NodeType.Statement); TTLUtils.printHoleMap(TTLUtils.match(ttlPattern,
 		 * ttlFragmentToMatch));
 		 */
-
-		 CPPASTBinaryExpression expr = (CPPASTBinaryExpression) TTLUtils.getExpression("a + b");
-		 System.out.println(IASTBinaryExpression.op_assign);
-		 System.out.println(expr.getOperator());
+		String ruleExpression = "x = y +  __ttlconstant__ + 25*z;";
+		List<String> pileList = new ArrayList<String>();
+		PileList pileL = new PileList("25*z, __ttlconstant__", true);
+		pileL.updateUntouchables(ruleExpression);
+		for(String str : pileL.unacceptableExpressions)
+		{
+			System.out.println("un " + str);
+		}
+		
+		for(String str : pileL.acceptableExpressions)
+		{
+			System.out.println("ac " + str);
+		}
+		
 		/*TTlExpression ttlPattern = new TTlExpression("std::sqrt(__ttlexpr__ * __ttlexpr2__)", NodeType.Expression);
 		TTlExpression ttlConstructExpression = new TTlExpression("vc::sqrt(__ttlexpr__)",
 				NodeType.Expression);
