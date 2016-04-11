@@ -65,8 +65,9 @@ public class TTLUtils {
 		Expression, Statement, Name, Declarator, Type, NotHole;
 	}
 
-	private final static String ttlHolePrefix = "__ttl";
-	private final static String ttlHoleSuffix = "__";
+	public final static String ttlHolePrefix = "__ttl";
+	public final static String ttlHoleSuffix = "__";
+	public final static String ttlTagPrefix = "__tagttl";
 
 	public static Map<String, List<IASTNode>> match(TTlExpression ttlPattern, TTlExpression ttlFragmentToMatch)
 			throws Exception {
@@ -318,8 +319,7 @@ public class TTLUtils {
 			return ((IASTDeclarator) patternNode).getName().toString();
 		} else if (patternNode instanceof CPPASTUsingDeclaration) {
 			return ((CPPASTUsingDeclaration) patternNode).getName().toString();
-		}
-		else if (patternNode instanceof IASTDeclSpecifier) {
+		} else if (patternNode instanceof IASTDeclSpecifier) {
 			return patternNode.getRawSignature().toString();
 		}
 		return "notahole";
@@ -554,7 +554,7 @@ public class TTLUtils {
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
 	}
 
-	public static String getHoleValue(String string, TTlExpression tTlExpression) {
+	public static String getHoleValue(String holeName, TTlExpression tTlExpression) {
 		return "1000";
 	}
 

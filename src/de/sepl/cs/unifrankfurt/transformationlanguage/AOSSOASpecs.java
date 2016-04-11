@@ -35,8 +35,7 @@ public class AOSSOASpecs {
 		String lhs = "__ttltype__ __ttla__[__ttlarraylimit__];";
 		NodeType ruleType = NodeType.Declaration;
 		Map<String, String> arraysubscripttagUpdates = new HashMap<String, String>();
-		arraysubscripttagUpdates.put("__tagttlsize__",
-				TTLUtils.getHoleValue("__ttlarraylimit__", new TTlExpression(lhs, ruleType)));
+		arraysubscripttagUpdates.put("__tagttlsize__","__ttlarraylimit__");
 		List<ScopeRule> structScopeRules = new ArrayList<ScopeRule>();
 		String rhs = "__ttltype__ __ttla__;";
 		ScopeRule arraysubscriptRule = new ScopeRule(lhs, rhs, ruleType, arraysubscripttagUpdates);

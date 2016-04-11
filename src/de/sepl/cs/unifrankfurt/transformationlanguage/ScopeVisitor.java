@@ -148,8 +148,8 @@ public class ScopeVisitor extends ASTVisitor {
 				enclosingNode.add(decl);
 				if (decl instanceof CPPASTSimpleDeclaration
 						&& ((CPPASTSimpleDeclaration) decl).getDeclSpecifier() instanceof CPPASTNamedTypeSpecifier) {
-					IASTName nameDecl = ((CPPASTNamedTypeSpecifier) ((CPPASTSimpleDeclaration) decl)
-							.getDeclSpecifier()).getName();
+					IASTName nameDecl = ((CPPASTNamedTypeSpecifier) ((CPPASTSimpleDeclaration) decl).getDeclSpecifier())
+							.getName();
 					enclosingNode.add(TransformationUtils.getDefns(nameDecl));
 				}
 			}
@@ -191,48 +191,33 @@ public class ScopeVisitor extends ASTVisitor {
 									scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
 								}
 							} else {
-								scope.tagValueMap.put(tagKey, r.tagUpdate.tagvalue);
+								if (r.tagUpdate.tagvalue.startsWith(TTLUtils.ttlHolePrefix)) {
+									scope.tagValueMap.put(tagKey,
+											holeMap.get(r.tagUpdate.tagvalue).get(0).getRawSignature());
+								} else {
+									scope.tagValueMap.put(tagKey, r.tagUpdate.tagvalue);
+								}
 							}
 
 						} else {
 							scope.tagValueMap.put(node.getRawSignature(),
 									TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
 							for (String tagKey : r.tagUpdates.keySet()) {
+								String tagValue = r.tagUpdates.get(tagKey);
+								if (tagValue.startsWith(TTLUtils.ttlHolePrefix)) {
+									tagValue = holeMap.get(tagValue).get(0).getRawSignature();
+								}
 								if (scope.tagValueMap.containsKey(tagKey)) {
-									if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdates.get(tagKey))) {
+									if (!scope.tagValueMap.get(tagKey).equals(tagValue)) {
 										scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
 									}
 								} else {
-									scope.tagValueMap.put(tagKey, r.tagUpdates.get(tagKey));
+									scope.tagValueMap.put(tagKey, tagValue);
+
 								}
 							}
 						}
 					}
-					/*else
-					{
-						if (r.tagUpdate != null) {
-							r.tagUpdate.setTagValue();
-							String tagKey = r.tagUpdate.tagname;
-							if (scope.tagValueMap.containsKey(tagKey)) {
-								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdate.tagvalue)) {
-									scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
-								}
-							} else {
-								scope.tagValueMap.put(tagKey, r.tagUpdate.tagvalue);
-							}
-
-						} else {
-							for (String tagKey : r.tagUpdates.keySet()) {
-								if (scope.tagValueMap.containsKey(tagKey)) {
-									if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdates.get(tagKey))) {
-										scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
-									}
-								} else {
-									scope.tagValueMap.put(tagKey, r.tagUpdates.get(tagKey));
-								}
-							}
-						}
-					}*/
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
