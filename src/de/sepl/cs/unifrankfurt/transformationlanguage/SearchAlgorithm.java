@@ -38,7 +38,7 @@ import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 @SuppressWarnings("restriction")
 public class SearchAlgorithm {
 
-	public static final Map<List<IASTNode>, TTlRule> AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
+	public static Map<List<IASTNode>, TTlRule> AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 	private static Set<TTlRule> rules = new HashSet<TTlRule>();
 	private static Queue<IASTNode> workQueue = new LinkedList<IASTNode>();
 	private static NameVisitor visitor = new NameVisitor();
@@ -50,10 +50,13 @@ public class SearchAlgorithm {
 		migrations = new Migrations();
 		SearchAlgorithm.ast = ast;
 		SearchAlgorithm.astRewrite = astRewrite;
-		rules = VCSpecs.populateRules();
-		// rules = GMPSpecs.populateRules();
+		//rules = VCSpecs.populateRules();
+		//rules = GMPSpecs.populateRules();
+		rules = AOSSOASpecs.populateRules();
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
+		workQueue = new LinkedList<IASTNode>();
+		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 		searchBlock(selectedNodeAsList);
 		System.out.println(migrations);
 	}
@@ -196,12 +199,6 @@ public class SearchAlgorithm {
 							node.accept(s);
 							scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
 							scope.setReferenceMap(s.referenceReplacements);
-							/*
-							 * for (String key :
-							 * s.referenceReplacements.keySet()) {
-							 * scope.tagValueMap.put(key,
-							 * s.referenceReplacements.get(key)); }
-							 */
 							s.refreshNodeReplacements();
 						}
 						holeMap.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);

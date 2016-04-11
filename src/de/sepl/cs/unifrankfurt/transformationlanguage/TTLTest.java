@@ -26,7 +26,7 @@ public class TTLTest {
 		 * NodeType.Statement); TTLUtils.printHoleMap(TTLUtils.match(ttlPattern,
 		 * ttlFragmentToMatch));
 		 */
-		String ruleExpression = "x = y +  __ttlconstant__ + 25*z;";
+	/*	String ruleExpression = "x = y +  __ttlconstant__ + 25*z;";
 		List<String> pileList = new ArrayList<String>();
 		PileList pileL = new PileList("25*z, __ttlconstant__", true);
 		pileL.updateUntouchables(ruleExpression);
@@ -38,17 +38,17 @@ public class TTLTest {
 		for(String str : pileL.acceptableExpressions)
 		{
 			System.out.println("ac " + str);
-		}
+		}*/
 		
-		/*TTlExpression ttlPattern = new TTlExpression("std::sqrt(__ttlexpr__ * __ttlexpr2__)", NodeType.Expression);
-		TTlExpression ttlConstructExpression = new TTlExpression("vc::sqrt(__ttlexpr__)",
-				NodeType.Expression);
+		TTlExpression ttlPattern = new TTlExpression("__ttltype__ __ttla__[__ttlarraylimit__];", NodeType.Declaration);
+		TTlExpression ttlConstructExpression = new TTlExpression("__ttltype__ __ttla__;",
+				NodeType.Declaration);
 
-		TTlExpression ttlFragmentToMatch = new TTlExpression("std::sqrt((x + y) * y)", NodeType.Expression);
+		TTlExpression ttlFragmentToMatch = new TTlExpression("float x[1024];", NodeType.Declaration);
 		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 		TTLUtils.printHoleMap(holeMap);
 		System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
-*/
+
 		/*
 		 * Map<Pair<String, String>, TypeMigration> varMigrations = new
 		 * HashMap<Pair<String, String>, TypeMigration>(); Map<Pair<String,

@@ -62,7 +62,7 @@ import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 public class TTLUtils {
 
 	public enum TTLHoleType {
-		Expression, Statement, Name, Declarator, NotHole;
+		Expression, Statement, Name, Declarator, Type, NotHole;
 	}
 
 	private final static String ttlHolePrefix = "__ttl";
@@ -319,6 +319,9 @@ public class TTLUtils {
 		} else if (patternNode instanceof CPPASTUsingDeclaration) {
 			return ((CPPASTUsingDeclaration) patternNode).getName().toString();
 		}
+		else if (patternNode instanceof IASTDeclSpecifier) {
+			return patternNode.getRawSignature().toString();
+		}
 		return "notahole";
 	}
 
@@ -358,6 +361,11 @@ public class TTLUtils {
 		if (patternNode instanceof IASTName) {
 			if (((IASTName) patternNode).toString().startsWith(ttlHolePrefix)) {
 				return TTLHoleType.Name;
+			}
+		}
+		if (patternNode instanceof IASTDeclSpecifier) {
+			if (patternNode.getRawSignature().startsWith(ttlHolePrefix)) {
+				return TTLHoleType.Type;
 			}
 		}
 		return TTLHoleType.NotHole;
@@ -544,6 +552,10 @@ public class TTLUtils {
 			expr.nodeWithHoles = expr.nodeWithHoles.replace(tag, referenceMap.get(tag));
 		}
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
+	}
+
+	public static String getHoleValue(String string, TTlExpression tTlExpression) {
+		return "1000";
 	}
 
 }

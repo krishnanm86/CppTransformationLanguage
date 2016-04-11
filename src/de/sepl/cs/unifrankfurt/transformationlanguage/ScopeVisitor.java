@@ -77,12 +77,14 @@ public class ScopeVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTDeclaration declaration) {
+		System.out.println("visiting" + declaration.getRawSignature());
 		applyRule(declaration, NodeType.Declaration);
 		return super.visit(declaration);
 	}
 
 	@Override
 	public int visit(IASTExpression expression) {
+		System.out.println("visiting" + expression.getRawSignature());
 		if (expression instanceof CPPASTFieldReference) {
 			try {
 				if (!SearchAlgorithm.migrations.getMigratedName(expression.getRawSignature())
@@ -160,6 +162,7 @@ public class ScopeVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTStatement statement) {
+		System.out.println("visiting" + statement.getRawSignature());
 		applyRule(statement, NodeType.Statement);
 		return super.visit(statement);
 	}
@@ -167,9 +170,6 @@ public class ScopeVisitor extends ASTVisitor {
 	private void applyRule(IASTNode node, NodeType type) {
 		for (ScopeRule r : scope.rules) {
 			if (r.type == type) {
-				if (node.getRawSignature().contains("temp2")) {
-					System.out.println();
-				}
 				TTlExpression ttlPattern = new TTlExpression(r.lhs, type);
 				TTlExpression ttlConstructExpression = new TTlExpression(r.Rhs, type);
 				TTlExpression ttlFragmentToMatch = new TTlExpression(node.getRawSignature(), type);
@@ -208,6 +208,31 @@ public class ScopeVisitor extends ASTVisitor {
 							}
 						}
 					}
+					/*else
+					{
+						if (r.tagUpdate != null) {
+							r.tagUpdate.setTagValue();
+							String tagKey = r.tagUpdate.tagname;
+							if (scope.tagValueMap.containsKey(tagKey)) {
+								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdate.tagvalue)) {
+									scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
+								}
+							} else {
+								scope.tagValueMap.put(tagKey, r.tagUpdate.tagvalue);
+							}
+
+						} else {
+							for (String tagKey : r.tagUpdates.keySet()) {
+								if (scope.tagValueMap.containsKey(tagKey)) {
+									if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdates.get(tagKey))) {
+										scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
+									}
+								} else {
+									scope.tagValueMap.put(tagKey, r.tagUpdates.get(tagKey));
+								}
+							}
+						}
+					}*/
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
