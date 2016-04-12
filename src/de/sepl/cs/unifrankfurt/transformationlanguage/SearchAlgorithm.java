@@ -52,7 +52,8 @@ public class SearchAlgorithm {
 		SearchAlgorithm.astRewrite = astRewrite;
 		//rules = VCSpecs.populateRules();
 		//rules = GMPSpecs.populateRules();
-		rules = AOSSOASpecs.populateRules();
+		//rules = AOSSOASpecs.populateRules();
+		rules = LoopTilingSpecs.populateRules();
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
 		workQueue = new LinkedList<IASTNode>();
