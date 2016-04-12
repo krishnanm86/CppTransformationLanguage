@@ -5,6 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.cdt.core.dom.ast.ASTVisitor;
 import org.eclipse.cdt.core.dom.ast.IASTBinaryExpression;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
@@ -73,6 +74,7 @@ public class ScopeVisitor extends ASTVisitor {
 		shouldVisitDeclarations = true;
 		shouldVisitStatements = true;
 		shouldVisitExpressions = true;
+		shouldVisitNames = true;
 	}
 
 	@Override
@@ -80,6 +82,22 @@ public class ScopeVisitor extends ASTVisitor {
 		System.out.println("visiting" + declaration.getRawSignature());
 		applyRule(declaration, NodeType.Declaration);
 		return super.visit(declaration);
+	}
+
+	@Override
+	public int visit(IASTName name) {
+		try {
+			for (Pair<String, String> varMigration : SearchAlgorithm.migrations.varMigrations.keySet()) {
+				if (name.toString().equals(varMigration.getLeft())) {
+					referenceReplacements.put(name.toString(), varMigration.getRight());
+					System.out.println("Migrating " + name.toString() + " to " + varMigration.getRight());
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		return super.visit(name);
 	}
 
 	@Override
@@ -109,6 +127,7 @@ public class ScopeVisitor extends ASTVisitor {
 			e.printStackTrace();
 		}
 		return super.visit(expression);
+
 	}
 
 	private IASTExpression getRHSofLHS(IASTNode expression) throws Exception {
