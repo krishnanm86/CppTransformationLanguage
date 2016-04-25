@@ -47,6 +47,7 @@ public class SearchAlgorithm {
 	public static Migrations migrations = new Migrations();
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
+		System.out.println("Beginning Search.....");
 		migrations = new Migrations();
 		SearchAlgorithm.ast = ast;
 		SearchAlgorithm.astRewrite = astRewrite;

@@ -29,10 +29,10 @@ public class GMPSpecs {
 		// -mpz_add(e1, e2, e3)
 		// +e1 = e2 + e3
 		TTlExpression rulePattern1 = new TTlExpression("__ttlp__ = __ttlp2__ + __ttlp3__;", NodeType.Statement);
-		TTlExpression ruleConstructExpression1 = new TTlExpression("mpz_add(__ttlp__,__ttlp2__,__ttlp3__);",
+		/*TTlExpression ruleConstructExpression1 = new TTlExpression("mpz_add(__ttlp__,__ttlp2__,__ttlp3__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern1, ruleConstructExpression1, NodeType.Statement, new HashMap<Scope, String>(),
-				new HashMap<Tag, String>()));
+				new HashMap<Tag, String>()));*/
 
 		// 2
 		// -mpz_add_ui(e1, e2, e3)
@@ -81,16 +81,16 @@ public class GMPSpecs {
 		// 7
 		// -mpz_init_set(e1, e2)
 		// +e1 = e2
-		TTlExpression rulePattern7 = new TTlExpression("__ttlp__ = __ttlp2__;", NodeType.Statement);
+	/*	TTlExpression rulePattern7 = new TTlExpression("__ttlp__ = __ttlp2__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression7 = new TTlExpression("mpz_init_set(__ttlp__,__ttlp2__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern7, ruleConstructExpression7, NodeType.Statement, new HashMap<Scope, String>(),
-				new HashMap<Tag, String>()));
+				new HashMap<Tag, String>()));*/
 
 		// 8
 		// -mpz_init_set_si(e1, e2)
 		// +e1 = e2
-		TTlExpression rulePattern8 = new TTlExpression("__ttlp__ = __ttlp2__;", NodeType.Statement);
+		TTlExpression rulePattern8 = new TTlExpression("__ttlp__ = -__ttlp2__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression8 = new TTlExpression("mpz_init_set_si(__ttlp__,__ttlp2__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern8, ruleConstructExpression8, NodeType.Statement, new HashMap<Scope, String>(),
@@ -108,11 +108,11 @@ public class GMPSpecs {
 		// 10
 		// -mpz_mod(e1, e2, e3)
 		// +e1 = e2 % e3
-		TTlExpression rulePattern10 = new TTlExpression("__ttlp__ = __ttlp2__ % __ttlp3__;", NodeType.Statement);
+		/*TTlExpression rulePattern10 = new TTlExpression("__ttlp__ = __ttlp2__ % __ttlp3__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression10 = new TTlExpression("mpz_mod(__ttlp__,__ttlp2__,__ttlp3__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern10, ruleConstructExpression10, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 11
 		// -mpz_mod_ui(e1, e2, e3)
@@ -126,20 +126,20 @@ public class GMPSpecs {
 		// 12
 		// -mpz_mul(e1, e2, e3)
 		// +e1 = e2 * e3
-		TTlExpression rulePattern12 = new TTlExpression("__ttlp__ = __ttlp2__ * __ttlp3__;", NodeType.Statement);
+		/*TTlExpression rulePattern12 = new TTlExpression("__ttlp__ = __ttlp2__ * __ttlp3__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression12 = new TTlExpression("mpz_mul(__ttlp__,__ttlp2__,__ttlp3__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern12, ruleConstructExpression12, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 13
 		// -mpz_get_ui(e1)
 		// +(e1 % 2)
-		TTlExpression rulePattern13 = new TTlExpression("__ttlp__ % __ttlp2__ ;", NodeType.Statement);
+		/*TTlExpression rulePattern13 = new TTlExpression("__ttlp__ % __ttlp2__ ;", NodeType.Statement);
 		TTlExpression ruleConstructExpression13 = new TTlExpression("mpz_get_ui(__ttlp__,__ttlp2__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern13, ruleConstructExpression13, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 14
 		// -mpz_invert(e1, e2, e3)
@@ -172,11 +172,11 @@ public class GMPSpecs {
 		// 17
 		// -mpz_sub(e1, e2, e3)
 		// +e1 = e2 - e3
-		TTlExpression rulePattern17 = new TTlExpression("__ttlp__ = __ttlp2__ - __ttlp3__;", NodeType.Statement);
+		/*TTlExpression rulePattern17 = new TTlExpression("__ttlp__ = __ttlp2__ - __ttlp3__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression17 = new TTlExpression("mpz_sub(__ttlp__,__ttlp2__,__ttlp3__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern17, ruleConstructExpression17, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 18
 		// -mpz_sub_ui(e1, e2, e3)
@@ -236,28 +236,28 @@ public class GMPSpecs {
 		// 25
 		// -mpz_set(e1, e2)
 		// +e1 = e2
-		TTlExpression rulePattern25 = new TTlExpression("__ttlp__ = __ttlp2__ ;", NodeType.Statement);
+		/*TTlExpression rulePattern25 = new TTlExpression("__ttlp__ = __ttlp2__ ;", NodeType.Statement);
 		TTlExpression ruleConstructExpression25 = new TTlExpression("mpz_set(__ttlp__,__ttlp2__);", NodeType.Statement);
 		rules.add(new TTlRule(rulePattern25, ruleConstructExpression25, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 26
 		// -mpz_set_ui(e1, e2)
 		// +e1 = e2
-		TTlExpression rulePattern26 = new TTlExpression("__ttlp__ = __ttlp2__;", NodeType.Statement);
+		/*TTlExpression rulePattern26 = new TTlExpression("__ttlp__ = __ttlp2__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression26 = new TTlExpression("mpz_set_ui(__ttlp__,__ttlp2__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern26, ruleConstructExpression26, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 27
 		// -mpz_set_si(e1, e2)
 		// +e1 = e2
-		TTlExpression rulePattern27 = new TTlExpression("__ttlp__ = __ttlp2__;", NodeType.Statement);
+		/*TTlExpression rulePattern27 = new TTlExpression("__ttlp__ = -__ttlp2__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression27 = new TTlExpression("mpz_set_si(__ttlp__,__ttlp2__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern27, ruleConstructExpression27, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 28
 		// -mpz_urandomm(e1, e2, e3)
@@ -289,11 +289,11 @@ public class GMPSpecs {
 		// 31
 		// -mpz_cmp_si(e1, e2)
 		// +(e1 - e2)
-		TTlExpression rulePattern31 = new TTlExpression("__ttlp__ - __ttlp2__;", NodeType.Statement);
+		/*TTlExpression rulePattern31 = new TTlExpression("__ttlp__ - __ttlp2__;", NodeType.Statement);
 		TTlExpression ruleConstructExpression31 = new TTlExpression("mpz_cmp_si(__ttlp__,__ttlp2__);",
 				NodeType.Statement);
 		rules.add(new TTlRule(rulePattern31, ruleConstructExpression31, NodeType.Statement,
-				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));*/
 
 		// 33
 		// -mpz_tstbit(e1, e2)

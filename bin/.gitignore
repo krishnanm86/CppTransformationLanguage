@@ -10,8 +10,6 @@
 /ttlLexer.tokens
 /ttlListener.java
 /ttlParser.java
-/de/
-/ttlBaseListener.class
 /ttlLexer.class
 /ttlListener.class
 /ttlParser$AlternativeContext.class
@@ -28,3 +26,4 @@
 /ttlParser$TextContext.class
 /ttlParser$ZeroormoreContext.class
 /ttlParser.class
+/de/

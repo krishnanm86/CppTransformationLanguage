@@ -37,16 +37,10 @@ public class TTLTest {
 		 * "ac " + str); }
 		 */
 
-
-		TTlExpression ttlPattern = new TTlExpression(
-				"for(int i = 0; i < __ttlouterlimit__; __ttlouterindex__++) {__ttlouterbody__; for(int j = 0; j < __ttlinnerlimit__; __ttlinnerindex__++) { __ttlinnerbody__; }}",
+		TTlExpression ttlPattern = new TTlExpression("__ttlp__ = __ttlp2__ + __ttlp3__;", NodeType.Statement);
+		TTlExpression ttlConstructExpression = new TTlExpression("mpz_add(__ttlp__,__ttlp2__,__ttlp3__);",
 				NodeType.Statement);
-		TTlExpression ttlConstructExpression = new TTlExpression(
-				"for(int __ttlouterindex__ = 0; __ttlouterindex__ < __ttlouterlimit__; __ttlouterindex__+=2) {__ttlouterbody__; for(int __ttlinnerindex__ = 0; __ttlinnerindex__ < __ttlinnerlimit__; __ttlinnerindex__+=2) { for(int x = __ttlouterindex__; x < min( __ttlouterindex__ +2. __ttlouterlimit__) ; x++){ for(int y = __ttlinnerindex__; x < min( __ttlinnerindex__+2. __ttlouterlimit__) ; y++){ __ttlinnerbody__; }}}}",
-				NodeType.Statement);
-		TTlExpression ttlFragmentToMatch = new TTlExpression(
-				"for (int i = 0; i < n; i++) { c[i] = 0; for (int j = 0; j < n; j++) { c[i] = c[i] + a[i][j] * b[j]; } }",
-				NodeType.Statement);
+		TTlExpression ttlFragmentToMatch = new TTlExpression("x = y + z;", NodeType.Statement);
 		Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 		TTLUtils.printHoleMap(holeMap);
 		System.out.println(TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());

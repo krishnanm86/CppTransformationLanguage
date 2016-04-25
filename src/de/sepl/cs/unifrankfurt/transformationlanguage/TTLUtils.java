@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.apache.commons.lang3.builder.HashCodeBuilder;
 import org.eclipse.cdt.core.dom.ast.IASTArrayDeclarator;
+import org.eclipse.cdt.core.dom.ast.IASTBinaryExpression;
 import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
@@ -103,14 +104,16 @@ public class TTLUtils {
 						if (lhs[1].startsWith(ttlHolePrefix) && lhs[1].endsWith(ttlHoleSuffix)) {
 							IASTExpression expr2 = TTLUtils.getExpression(rhs[1]);
 							retHoleMap.put(lhs[1], new ArrayList<IASTNode>(Arrays.asList(expr2)));
-						}
-						else
-						{
+						} else {
 							int startIndex = lhs[1].indexOf(ttlHolePrefix);
-							String str = lhs[1].substring(lhs[1].lastIndexOf(ttlHoleSuffix) + ttlHoleSuffix.length(), lhs[1].length());
+							String str = lhs[1].substring(lhs[1].lastIndexOf(ttlHoleSuffix) + ttlHoleSuffix.length(),
+									lhs[1].length());
 							int endIndex = rhs[1].lastIndexOf(str);
 							IASTExpression expr2 = TTLUtils.getExpression(rhs[1].substring(startIndex, endIndex));
-							retHoleMap.put(lhs[1].substring(lhs[1].indexOf(ttlHolePrefix), lhs[1].lastIndexOf(ttlHoleSuffix) + ttlHoleSuffix.length()), new ArrayList<IASTNode>(Arrays.asList(expr2)));
+							retHoleMap.put(
+									lhs[1].substring(lhs[1].indexOf(ttlHolePrefix),
+											lhs[1].lastIndexOf(ttlHoleSuffix) + ttlHoleSuffix.length()),
+									new ArrayList<IASTNode>(Arrays.asList(expr2)));
 						}
 					}
 				}
@@ -296,6 +299,12 @@ public class TTLUtils {
 		if (patternNode instanceof IASTCompositeTypeSpecifier || patternNode instanceof IASTNamedTypeSpecifier
 				|| patternNode instanceof IASTArrayDeclarator || patternNode instanceof IASTEqualsInitializer) {
 			return true;
+		}
+		if (patternNode instanceof IASTBinaryExpression && matchNode instanceof IASTBinaryExpression) {
+			if (((IASTBinaryExpression) patternNode).getOperator() != ((IASTBinaryExpression) matchNode)
+					.getOperator()) {
+				return false;
+			}
 		}
 		Object[] patternNodeDetails = getNameTypeHashCode(patternNode);
 		Class<?> typePatternNode = (Class<?>) patternNodeDetails[0];
