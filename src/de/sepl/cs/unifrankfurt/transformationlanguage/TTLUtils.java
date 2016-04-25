@@ -104,7 +104,14 @@ public class TTLUtils {
 							IASTExpression expr2 = TTLUtils.getExpression(rhs[1]);
 							retHoleMap.put(lhs[1], new ArrayList<IASTNode>(Arrays.asList(expr2)));
 						}
-
+						else
+						{
+							int startIndex = lhs[1].indexOf(ttlHolePrefix);
+							String str = lhs[1].substring(lhs[1].lastIndexOf(ttlHoleSuffix) + ttlHoleSuffix.length(), lhs[1].length());
+							int endIndex = rhs[1].lastIndexOf(str);
+							IASTExpression expr2 = TTLUtils.getExpression(rhs[1].substring(startIndex, endIndex));
+							retHoleMap.put(lhs[1].substring(lhs[1].indexOf(ttlHolePrefix), lhs[1].lastIndexOf(ttlHoleSuffix) + ttlHoleSuffix.length()), new ArrayList<IASTNode>(Arrays.asList(expr2)));
+						}
 					}
 				}
 			}

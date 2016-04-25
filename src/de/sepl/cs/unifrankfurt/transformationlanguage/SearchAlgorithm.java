@@ -50,16 +50,20 @@ public class SearchAlgorithm {
 		migrations = new Migrations();
 		SearchAlgorithm.ast = ast;
 		SearchAlgorithm.astRewrite = astRewrite;
-		//rules = VCSpecs.populateRules();
-		//rules = GMPSpecs.populateRules();
-		//rules = AOSSOASpecs.populateRules();
-		rules = LoopTilingSpecs.populateRules();
+		setRules();
 		visitor = new NameVisitor();
 		List<IASTNode> selectedNodeAsList = new ArrayList<IASTNode>(Arrays.asList(selectedNode));
 		workQueue = new LinkedList<IASTNode>();
 		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 		searchBlock(selectedNodeAsList);
 		System.out.println(migrations);
+	}
+
+	private static void setRules() throws Exception {
+		// rules = VCSpecs.populateRules();
+		rules = GMPSpecs.populateRules();
+		// rules = AOSSOASpecs.populateRules();
+		// rules = LoopTilingSpecs.populateRules();
 	}
 
 	private static void searchBlock(List<IASTNode> selectedNodeAsList) throws Exception {
@@ -82,10 +86,13 @@ public class SearchAlgorithm {
 				workQueueBlock(rule, selectedNodeAsList);
 			}
 		} else {
-			List<IASTNode> enclosingNode = getEnclosingNode(selectedNodeAsList);
-			TTlRule ruleForEnclosingNode = ruleApplicable(enclosingNode);
-			if (!isNodeHandled(enclosingNode)) {
-				workQueueBlock(ruleForEnclosingNode, enclosingNode);
+			try {
+				List<IASTNode> enclosingNode = getEnclosingNode(selectedNodeAsList);
+				TTlRule ruleForEnclosingNode = ruleApplicable(enclosingNode);
+				if (!isNodeHandled(enclosingNode)) {
+					workQueueBlock(ruleForEnclosingNode, enclosingNode);
+				}
+			} catch (Exception e) {
 			}
 		}
 		if (!workQueue.isEmpty()) {
@@ -398,6 +405,7 @@ public class SearchAlgorithm {
 	}
 
 	public static TTlRule ruleApplicable(List<IASTNode> selectedNodeAsList) throws Exception {
+		setRules();
 		if (selectedNodeAsList.size() == 1) {
 			return ruleApplicableSingleNode(selectedNodeAsList.get(0));
 		} else {

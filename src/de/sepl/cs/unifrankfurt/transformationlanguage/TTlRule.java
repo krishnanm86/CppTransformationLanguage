@@ -1,5 +1,6 @@
 package de.sepl.cs.unifrankfurt.transformationlanguage;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
@@ -11,7 +12,6 @@ public class TTlRule {
 	Map<Tag, String> tagValueMap;
 	PileList pileList;
 
-
 	public TTlRule(TTlExpression lhs, TTlExpression rhs, NodeType type) throws Exception {
 		if ((lhs.type == type) && (lhs.type == rhs.type)) {
 			this.type = type;
@@ -20,6 +20,8 @@ public class TTlRule {
 		} else {
 			throw new Exception("Rule types dont match");
 		}
+		scopeFragmentMap = new HashMap<Scope, String>();
+		tagValueMap = new HashMap<Tag, String>();
 	}
 
 	public TTlRule(TTlExpression lhs, TTlExpression rhs, NodeType type, Map<Scope, String> scopeFragmentMap,

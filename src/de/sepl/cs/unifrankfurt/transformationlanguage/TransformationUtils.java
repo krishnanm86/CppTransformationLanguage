@@ -7,8 +7,11 @@ import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.IBinding;
+import org.eclipse.cdt.internal.core.dom.parser.c.CVariable;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPClassType;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPVariable;
+import org.eclipse.cdt.internal.core.pdom.dom.cpp.IPDOMCPPClassType;
+import org.eclipse.cdt.internal.core.pdom.dom.cpp.PDOMCPPClassTemplate;
 
 @SuppressWarnings("restriction")
 public class TransformationUtils {
@@ -17,6 +20,10 @@ public class TransformationUtils {
 		// Assuming that this function gathers only a type node
 		IASTNode defn = null;
 		IBinding nameBinding = typeNode.getBinding();
+		if(nameBinding instanceof IPDOMCPPClassType)
+		{
+			
+		}
 		if (nameBinding instanceof CPPClassType) {
 			defn = ((CPPClassType) nameBinding).getDefinition().getParent();
 		}
@@ -29,7 +36,7 @@ public class TransformationUtils {
 	public static List<IASTNode> getUses(IASTName objectRef, IASTTranslationUnit ast) {
 		ArrayList<IASTNode> uses = new ArrayList<IASTNode>();
 		IBinding binding = objectRef.getBinding();
-		if (binding instanceof CPPVariable) {
+		if (binding instanceof CPPVariable || binding instanceof CVariable) {
 			for (IASTName name : ast.getReferences(binding)) {
 				uses.add(name.getParent().getParent());
 			}

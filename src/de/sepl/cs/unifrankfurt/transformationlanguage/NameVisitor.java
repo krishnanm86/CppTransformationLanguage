@@ -5,6 +5,7 @@ import java.util.List;
 
 import org.eclipse.cdt.core.dom.ast.ASTVisitor;
 import org.eclipse.cdt.core.dom.ast.IASTName;
+import org.eclipse.cdt.internal.core.dom.parser.c.CVariable;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPClassType;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPVariable;
 
@@ -31,6 +32,9 @@ public class NameVisitor extends ASTVisitor {
 			typerefs.add(name);
 		}
 		if (name.getBinding() instanceof CPPVariable) {
+			objectrefs.add(name);
+		}
+		if (name.getBinding() instanceof CVariable) {
 			objectrefs.add(name);
 		}
 		return super.visit(name);
