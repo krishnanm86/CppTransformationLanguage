@@ -482,8 +482,14 @@ public class SearchAlgorithm {
 			selectedNode.accept(visitor);
 			for (IASTName objectref : visitor.getObjectrefs()) {
 				if (!visitor.visitedNames.contains(objectref)) {
+					if (objectref.toString().contains("poly")) {
+						System.out.println("Getting uses of " + objectref.toString());
+					}
 					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
 						dependencies.add(use);
+						if (objectref.toString().contains("poly")) {
+							System.out.println(use.getParent().getRawSignature());
+						}
 					}
 					visitor.visitedNames.add(objectref);
 				}
