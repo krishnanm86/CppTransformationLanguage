@@ -41,7 +41,13 @@ public class TransformationUtils {
 				uses.add(name.getParent().getParent());
 			}
 			for (IASTName name : ast.getDeclarationsInAST(binding)) {
-				uses.add(name.getParent().getParent());
+				List<IASTNode> nodes = new ArrayList<IASTNode>();
+				nodes.add(name.getParent().getParent());
+				if (!SearchAlgorithm.isNodeHandled(nodes)) {
+					if (binding instanceof CParameter) {
+						uses.add(name.getParent().getParent());
+					}
+				}
 			}
 		}
 		return uses;

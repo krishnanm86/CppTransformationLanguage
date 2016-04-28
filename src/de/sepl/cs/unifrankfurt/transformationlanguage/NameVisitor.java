@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.eclipse.cdt.core.dom.ast.ASTVisitor;
+import org.eclipse.cdt.core.dom.ast.IASTArraySubscriptExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.internal.core.dom.parser.c.CParameter;
 import org.eclipse.cdt.internal.core.dom.parser.c.CVariable;
@@ -28,6 +29,15 @@ public class NameVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTName name) {
+		if ((name.getParent().getParent() instanceof IASTArraySubscriptExpression)) {
+			IASTArraySubscriptExpression expr = (IASTArraySubscriptExpression) name.getParent().getParent();
+			System.out.println("Array encountered");
+			System.out.println(expr.getChildren()[0].getRawSignature() + "q3iouoqui");
+			System.out.println(expr.getChildren()[1].getRawSignature() + "q3iouoqui");
+			if (expr.getChildren()[1].equals(name.getParent())) {
+				return super.visit(name);
+			}
+		}
 		names.add(name);
 		if (name.getBinding() instanceof CPPClassType) {
 			typerefs.add(name);

@@ -96,10 +96,42 @@ public class SearchAlgorithm {
 			} catch (Exception e) {
 			}
 		}
-		if (!workQueue.isEmpty()) {
+		while(!workQueue.isEmpty()) {
 			IASTNode unresolved = workQueue.remove();
-			searchBlock(new ArrayList<IASTNode>(Arrays.asList(unresolved)));
+			searchBlock1(new ArrayList<IASTNode>(Arrays.asList(unresolved)));
 		}
+	}
+
+	private static void searchBlock1(ArrayList<IASTNode> selectedNodeAsList) throws Exception {
+		if (selectedNodeAsList.get(0) instanceof CPPASTReturnStatement) {
+			IASTExpression returnExpression = ((CPPASTReturnStatement) selectedNodeAsList.get(0)).getReturnValue();
+			if (returnExpression instanceof CPPASTIdExpression) {
+				IType type = (((CPPVariable) (((CPPASTIdExpression) returnExpression).getName().getBinding()))
+						.getType());
+				System.out.println("Warning " + (((CPPASTIdExpression) returnExpression).getName().toString() + " "
+						+ " returned and type changed "));
+				IASTNode node = (((CPPVariable) (((CPPASTIdExpression) returnExpression).getName().getBinding()))
+						.getDefinition());
+				System.out.println(type.getClass().getName());
+				System.out.println(node.getRawSignature());
+			}
+		}
+		TTlRule rule = ruleApplicable(selectedNodeAsList);
+		if (rule != null) {
+			if (!isNodeHandled(selectedNodeAsList)) {
+				workQueueBlock(rule, selectedNodeAsList);
+			}
+		} else {
+			try {
+				List<IASTNode> enclosingNode = getEnclosingNode(selectedNodeAsList);
+				TTlRule ruleForEnclosingNode = ruleApplicable(enclosingNode);
+				if (!isNodeHandled(enclosingNode)) {
+					workQueueBlock(ruleForEnclosingNode, enclosingNode);
+				}
+			} catch (Exception e) {
+			}
+		}
+
 	}
 
 	private static List<IASTNode> getEnclosingNode(List<IASTNode> selectedNodeAsList) throws Exception {
@@ -174,7 +206,7 @@ public class SearchAlgorithm {
 		return retExpression;
 	}
 
-	private static boolean isNodeHandled(List<IASTNode> node) {
+	public static boolean isNodeHandled(List<IASTNode> node) {
 		Set<Object> set1 = new HashSet<Object>();
 		set1.addAll(node);
 		for (List<IASTNode> node2 : AppliedRules.keySet()) {

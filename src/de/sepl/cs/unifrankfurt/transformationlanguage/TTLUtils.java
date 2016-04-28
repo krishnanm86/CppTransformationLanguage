@@ -235,13 +235,15 @@ public class TTLUtils {
 
 	private static CharSequence getNodeWithHoles(List<IASTNode> list) {
 		String str = "";
-		for (IASTNode node : list) {
-			if (node instanceof CPPASTCompoundStatement) {
-				for (IASTStatement stat : ((CPPASTCompoundStatement) node).getStatements()) {
-					str = str + stat.getRawSignature();
+		if (list != null) {
+			for (IASTNode node : list) {
+				if (node instanceof CPPASTCompoundStatement) {
+					for (IASTStatement stat : ((CPPASTCompoundStatement) node).getStatements()) {
+						str = str + stat.getRawSignature();
+					}
+				} else {
+					str = str + node.getRawSignature();
 				}
-			} else {
-				str = str + node.getRawSignature();
 			}
 		}
 		return str;
@@ -469,8 +471,8 @@ public class TTLUtils {
 		}
 		parser2 = new GNUCPPSourceParser(scanner, ParserMode.COMPLETE_PARSE, new NullLogService(), config);
 		IASTTranslationUnit tu = parser2.parse();
-		if (parser2.encounteredError())
-			throw new RuntimeException("PARSE FAILURE");
+		//if (parser2.encounteredError())
+			//throw new RuntimeException("PARSE FAILURE");
 		IASTProblem[] problems = CPPVisitor.getProblems(tu);
 		if (problems.length > 0) {
 			throw new RuntimeException("Parse fails: " + Arrays.toString(problems));
