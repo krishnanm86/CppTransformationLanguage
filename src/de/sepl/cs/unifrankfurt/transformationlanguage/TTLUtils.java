@@ -142,6 +142,33 @@ public class TTLUtils {
 		return nodeToReturn;
 	}
 
+	public static IASTNode getNodeFromString(String node) throws Exception {
+		IASTNode nodeToReturn = null;
+		try {
+			nodeToReturn = getDeclaration(node);
+		} catch (Exception e) {
+		}
+		if (nodeToReturn == null) {
+			try {
+				nodeToReturn = getStatement(node);
+			} catch (Exception e) {
+			}
+		}
+		if (nodeToReturn == null) {
+			try {
+				nodeToReturn = getExpression(node);
+			} catch (Exception e) {
+			}
+		}
+		if (nodeToReturn == null) {
+			try {
+				nodeToReturn = getDeclSpecifier(node);
+			} catch (Exception e) {
+			}
+		}
+		return nodeToReturn;
+	}
+
 	public static void printHoleMap(Map<String, List<IASTNode>> holeMap) {
 		for (String key : holeMap.keySet()) {
 			System.out.println("------------------");
@@ -218,6 +245,14 @@ public class TTLUtils {
 		}
 		System.out.println(expr.nodeWithHoles);
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
+	}
+
+	public static IASTNode constructUsingHoleMap(Map<String, String> holeMap, TTlExpression expr) throws Exception {
+		String returnNode = new String(expr.nodeWithHoles);
+		for (String hole : holeMap.keySet()) {
+			returnNode.replace(hole, holeMap.get(hole));
+		}
+		return getNodeFromString(returnNode, expr.type);
 	}
 
 	public static IASTNode construct(Map<String, List<IASTNode>> holeMap, TTlExpression expr,
@@ -471,8 +506,8 @@ public class TTLUtils {
 		}
 		parser2 = new GNUCPPSourceParser(scanner, ParserMode.COMPLETE_PARSE, new NullLogService(), config);
 		IASTTranslationUnit tu = parser2.parse();
-		//if (parser2.encounteredError())
-			//throw new RuntimeException("PARSE FAILURE");
+		// if (parser2.encounteredError())
+		// throw new RuntimeException("PARSE FAILURE");
 		IASTProblem[] problems = CPPVisitor.getProblems(tu);
 		if (problems.length > 0) {
 			throw new RuntimeException("Parse fails: " + Arrays.toString(problems));
