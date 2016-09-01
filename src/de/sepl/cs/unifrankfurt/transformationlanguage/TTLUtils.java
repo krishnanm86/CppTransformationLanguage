@@ -530,7 +530,7 @@ public class TTLUtils {
 		String compilableStr = "void fn(){" + str + "}";
 		IASTTranslationUnit tu = parse(compilableStr);
 		CPPASTFunctionDefinition defn = (CPPASTFunctionDefinition) tu.getChildren()[0];
-		if (((CPPASTCompoundStatement) defn.getBody()).getStatements().length > 0) {
+		if (((CPPASTCompoundStatement) defn.getBody()).getStatements().length > 1) {
 			return ((CPPASTCompoundStatement) defn.getBody());
 		}
 		return ((CPPASTCompoundStatement) defn.getBody()).getStatements()[0];
