@@ -247,7 +247,8 @@ public class TTLUtils {
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
 	}
 
-	public static IASTNode constructUsingHoleMap(Map<String, String> holeMap, TTlExpression expr) throws Exception {
+	public static IASTNode constructUsingHoleMap(Map<String, String> holeMap, TTlExpression expr,
+			Map<String, String> tagValueMap, Map<String, String> referenceMap) throws Exception {
 		String returnNode = new String(expr.nodeWithHoles);
 		for (String hole : holeMap.keySet()) {
 			returnNode = returnNode.replace(hole, holeMap.get(hole));
@@ -266,6 +267,11 @@ public class TTLUtils {
 			expr.nodeWithHoles = expr.nodeWithHoles.replace(tag, tagUpdates.get(tag));
 		}
 		return getNodeFromString(expr.nodeWithHoles, expr.type);
+	}
+
+	public static Map<String, String> getHoleMap(String pattern, String code) {
+		StringTemplate matcher = new StringTemplate(pattern);
+		return matcher.parse(code);
 	}
 
 	private static CharSequence getNodeWithHoles(List<IASTNode> list) {
@@ -609,6 +615,23 @@ public class TTLUtils {
 
 	public static String getHoleValue(String holeName, TTlExpression tTlExpression) {
 		return "1000";
+	}
+
+	public static IASTNode constructUsingHoleMap(Map<String, String> holeMap, TTlExpression expr,
+			Map<String, String> tagValueMap) throws Exception {
+		String returnNode = new String(expr.nodeWithHoles);
+		for (String hole : holeMap.keySet()) {
+			returnNode = returnNode.replace(hole, holeMap.get(hole));
+		}
+		return getNodeFromString(returnNode, expr.type);
+	}
+
+	public static IASTNode constructUsingHoleMap(Map<String, String> holeMap, TTlExpression expr) throws Exception {
+		String returnNode = new String(expr.nodeWithHoles);
+		for (String hole : holeMap.keySet()) {
+			returnNode = returnNode.replace(hole, holeMap.get(hole));
+		}
+		return getNodeFromString(returnNode, expr.type);
 	}
 
 }

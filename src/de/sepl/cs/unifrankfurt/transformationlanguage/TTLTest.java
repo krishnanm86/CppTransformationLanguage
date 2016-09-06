@@ -17,11 +17,11 @@ import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 public class TTLTest {
 
 	public static void main(String[] args) throws Exception {
-		String pattern = "__ttla__ = __ttlb__ + __ttlc__;";
-		String transform = "mpz_add(__ttla__,__ttlb__,__ttlc__);";
+		String pattern = "__ttltype__  __ttlaobj__[__ttllimit__];";
+		String transform = "__ttltype___v __ttlaobj___v[__ttllimit__/float_v::size];";
 		TTlExpression ttlPattern = new TTlExpression(pattern, NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(transform, NodeType.Statement);
-		TTlExpression ttlFragmentToMatch = new TTlExpression("x = y + z;", NodeType.Statement);
+		TTlExpression ttlFragmentToMatch = new TTlExpression("PolarCoordinate output[1000];", NodeType.Statement);
 		StringTemplate matcher = new StringTemplate(ttlPattern.nodeWithHoles);
 		Map<String, String> holeMap = matcher.parse(ttlFragmentToMatch.nodeWithHoles);
 		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression).getRawSignature());
@@ -29,7 +29,7 @@ public class TTLTest {
 		TTlExpression ttlForPattern = new TTlExpression(
 				"for(int i = 0 ; i < __ttllimit__; __ttli__++ ) {__ttlforbody__;  }", NodeType.Statement);
 		TTlExpression ttlForConstructExpression = new TTlExpression(
-				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/__tagttlvctypeloop__::size; __ttli__++ ) {__ttlforbody__;  }",
+				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/1000::size; __ttli__++ ) {__ttlforbody__;  }",
 				NodeType.Statement);
 	}
 }
