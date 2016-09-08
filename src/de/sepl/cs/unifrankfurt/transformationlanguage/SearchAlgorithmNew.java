@@ -99,7 +99,8 @@ public class SearchAlgorithmNew {
 			String declarationRule = "__ttltype__ " + str[1];
 			declarationRule = declarationRule.replaceAll("\\s+", " ");
 
-			Map<String, String> holeMapDeclaration = TTLUtils.getHoleMap(declarationRule, definition.getRawSignature());
+			Map<String, String> holeMapDeclaration = TTLUtils.getHoleMap(declarationRule,
+					declaration.getRawSignature());
 			applyScopedRule(rule.scopeFragmentMap, holeMapDeclaration);
 
 			// Merge the holeMaps
@@ -112,22 +113,31 @@ public class SearchAlgorithmNew {
 				holeMap.put(key, holeMapDeclaration.get(key));
 			}
 
-			String ruleStringRHS = rule.lhs.nodeWithHoles;
-			String strRHS[] = ruleString.split("}");
+			String ruleStringRHS = rule.rhs.nodeWithHoles;
+			String strRHS[] = ruleStringRHS.split("}");
 
 			// Match Definition
 			String definitionRuleRHS = strRHS[0] + "}";
 			definitionRuleRHS = definitionRuleRHS.replaceAll("\\s+", " ");
 			// Match Declaration
-			String declarationRuleRHS = "__ttltype__ " + str[1];
+			String declarationRuleRHS = "__ttltype__ " + strRHS[1];
 			declarationRuleRHS = declarationRuleRHS.replaceAll("\\s+", " ");
 
 			IASTNode definitionToReplace = TTLUtils.constructUsingHoleMap(holeMap,
-					new TTlExpression(definitionRuleRHS, rule.type));
-			astRewrite.replace(definition, definitionToReplace, new TextEditGroup("Transformation language"));
+					new TTlExpression(definitionRuleRHS, NodeType.DeclSpecifier));
+			System.out.println("Replacing ");
+			System.out.println(definition.getRawSignature());
+			System.out.println("With");
+			System.out.println(definitionToReplace.getRawSignature());
 
 			IASTNode declarationToReplace = TTLUtils.constructUsingHoleMap(holeMap,
-					new TTlExpression(declarationRuleRHS, rule.type));
+					new TTlExpression(declarationRuleRHS, NodeType.Declaration));
+			System.out.println("Replacing ");
+			System.out.println(declaration.getRawSignature());
+			System.out.println("With");
+			System.out.println(declarationToReplace.getRawSignature());
+
+			astRewrite.replace(definition, definitionToReplace, new TextEditGroup("Transformation language"));
 			astRewrite.replace(declaration, declarationToReplace, new TextEditGroup("Transformation language"));
 
 		}
@@ -152,7 +162,8 @@ public class SearchAlgorithmNew {
 				}
 
 				for (String codeToFind : nodeReplacements.keySet()) {
-					codeFragmentString.replace(codeToFind, nodeReplacements.get(codeToFind));
+					String replaceString = nodeReplacements.get(codeToFind);
+					codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
 				}
 
 				holeMap.put(holeFragment, codeFragmentString);
@@ -164,7 +175,7 @@ public class SearchAlgorithmNew {
 		List<IASTNode> nodes = new ArrayList<IASTNode>(Arrays.asList(sN));
 		TTlRule rule = null;
 		for (TTlRule rl : rules) {
-			String pattern = rule.lhs.nodeWithHoles;
+			String pattern = rl.lhs.nodeWithHoles;
 			String codeToMatch = sN.getRawSignature();
 			if (TTLUtils.getHoleMap(pattern.replaceAll("\\s+", " "), codeToMatch.replaceAll("\\s+", " ")).size() > 0) {
 				rule = rl;
