@@ -145,12 +145,12 @@ public class TTLUtils {
 	public static IASTNode getNodeFromString(String node) throws Exception {
 		IASTNode nodeToReturn = null;
 		try {
-			nodeToReturn = getDeclaration(node);
+			nodeToReturn = getStatement(node);
 		} catch (Exception e) {
 		}
 		if (nodeToReturn == null) {
 			try {
-				nodeToReturn = getStatement(node);
+				nodeToReturn = getDeclaration(node);
 			} catch (Exception e) {
 			}
 		}
@@ -271,7 +271,34 @@ public class TTLUtils {
 
 	public static Map<String, String> getHoleMap(String pattern, String code) {
 		StringTemplate matcher = new StringTemplate(pattern);
-		return matcher.parse(code);
+		Map<String, String> holeMap = new HashMap<String, String>();
+		try {
+			holeMap = matcher.parse(code);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		return holeMap;
+	}
+
+	public static Map<String, String> getHoleMapRemoveLastSemiColon(String pattern, String code) {
+		StringTemplate matcher = new StringTemplate(pattern);
+		Map<String, String> holeMap = new HashMap<String, String>();
+		try {
+			holeMap = matcher.parse(code);
+		} catch (Exception e) {
+			System.out.println(e.getMessage());
+		}
+		for (String key : holeMap.keySet()) {
+			holeMap.put(key, removeLastSemiColon(holeMap.get(key)));
+		}
+		return holeMap;
+	}
+
+	public static String removeLastSemiColon(String str) {
+		if (str != null && str.length() > 0 && str.charAt(str.length() - 1) == ';') {
+			str = str.substring(0, str.length() - 1);
+		}
+		return str;
 	}
 
 	private static CharSequence getNodeWithHoles(List<IASTNode> list) {

@@ -45,7 +45,7 @@ public class transLangRefactoring extends CRefactoring {
 		selectedNode = ast.getNodeSelector(null).findNode(selectedRegion.getOffset(), selectedRegion.getLength());
 		try {
 			ASTRewrite rewriter = collector.rewriterForTranslationUnit(ast);
-			SearchAlgorithm.search(selectedNode, ast, rewriter);
+			SearchAlgorithmNew.search(selectedNode, ast, rewriter);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

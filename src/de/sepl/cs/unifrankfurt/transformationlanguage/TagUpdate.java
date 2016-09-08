@@ -20,5 +20,13 @@ public class TagUpdate {
 			}
 		}
 	}
+	
+	public void setTagValueNew() throws Exception {
+		for (WhereCondition condition : whereClauses) {
+			if (condition.checkNew()) {
+				tagvalue = condition.value;
+			}
+		}
+	}
 
 }

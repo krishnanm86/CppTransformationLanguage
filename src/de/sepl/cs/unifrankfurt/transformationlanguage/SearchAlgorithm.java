@@ -18,6 +18,7 @@ import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
+import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.IType;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
@@ -170,7 +171,7 @@ public class SearchAlgorithm {
 		List<IASTNode> dependencies;
 		List<IASTName> untouchableNames = new ArrayList<IASTName>();
 		List<IASTExpression> acceptableExpression = new ArrayList<IASTExpression>();
-		if (rule != null && rule.pileList != null) {
+		/*if (rule != null && rule.pileList != null) {
 			acceptableExpression = getExpressionsAsNodes(rule.pileList.acceptableExpressions);
 			List<IASTExpression> unacceptableExpression = getExpressionsAsNodes(rule.pileList.unacceptableExpressions);
 			for (IASTExpression expr : unacceptableExpression) {
@@ -183,7 +184,8 @@ public class SearchAlgorithm {
 			dependencies = getDependenciesWithUntouchableNames(selectedNodeAsList, true, untouchableNames);
 		} else {
 			dependencies = getDependencies(selectedNodeAsList, true);
-		}
+		}*/
+		dependencies = getDependencies(selectedNodeAsList, true);
 		workQueue.addAll(acceptableExpression);
 		workQueue.addAll(dependencies);
 		for (IASTNode selectedNode : selectedNodeAsList) {
@@ -219,129 +221,15 @@ public class SearchAlgorithm {
 		return false;
 	}
 
-	/*
-	 * public static boolean applyRule(TTlRule rule, List<IASTNode>
-	 * selectedNodeAsList) throws Exception { // TODO: Make rule apply properly
-	 * and perform the transformation System.out.println("applying rule to ");
-	 * for (IASTNode node : selectedNodeAsList) {
-	 * System.out.println(node.getRawSignature()); } if
-	 * (selectedNodeAsList.size() == 1) { TTlExpression ttlPattern = rule.lhs;
-	 * TTlExpression ttlFragmentToMatch = new
-	 * TTlExpression(selectedNodeAsList.get(0).getRawSignature(), rule.type);
-	 * Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern,
-	 * ttlFragmentToMatch); if (rule.scopeFragmentMap != null &&
-	 * rule.tagValueMap != null) { for (Scope scope :
-	 * rule.scopeFragmentMap.keySet()) { ScopeVisitor s = new
-	 * ScopeVisitor(scope, astRewrite); if
-	 * (holeMap.get(rule.scopeFragmentMap.get(scope)) != null) { List<IASTNode>
-	 * scopeMatches = holeMap.get(rule.scopeFragmentMap.get(scope));
-	 * List<IASTNode> scopeMatchesNew = new ArrayList<IASTNode>(); for (IASTNode
-	 * node : scopeMatches) { node.accept(s);
-	 * scopeMatchesNew.add(replaceNodes(node, s.nodeReplacements));
-	 * scope.setReferenceMap(s.referenceReplacements);
-	 * s.refreshNodeReplacements(); }
-	 * holeMap.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew); } } }
-	 * TTlExpression ttlConstructExpression = rule.rhs; IASTNode nodeToReplace =
-	 * null; for (Scope s : rule.scopeFragmentMap.keySet()) { if
-	 * (!s.tagValueMap.isEmpty()) { if (!s.referenceMap.isEmpty()) {
-	 * nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression,
-	 * s.tagValueMap, s.referenceMap); } else { nodeToReplace =
-	 * TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap); } } }
-	 * if (nodeToReplace == null) { nodeToReplace = TTLUtils.construct(holeMap,
-	 * ttlConstructExpression); } if (nodeToReplace instanceof
-	 * CPPASTCompoundStatement) { // TODO: HACK here please change appropriately
-	 * if (((CPPASTCompoundStatement) nodeToReplace).getStatements().length ==
-	 * 2) { astRewrite.replace(selectedNodeAsList.get(0),
-	 * ((CPPASTCompoundStatement) nodeToReplace).getStatements()[1], new
-	 * TextEditGroup("API Migration"));
-	 * astRewrite.insertBefore(selectedNodeAsList.get(0).getParent(),
-	 * selectedNodeAsList.get(0), ((CPPASTCompoundStatement)
-	 * nodeToReplace).getStatements()[0], new TextEditGroup("API Migration")); }
-	 * if (((CPPASTCompoundStatement) nodeToReplace).getStatements().length ==
-	 * 1) { astRewrite.replace(selectedNodeAsList.get(0),
-	 * ((CPPASTCompoundStatement) nodeToReplace).getStatements()[0], new
-	 * TextEditGroup("API Migration")); }
-	 * 
-	 * } else { astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new
-	 * TextEditGroup("API Migration")); } } else if (rule != null && rule.type
-	 * == NodeType.DeclDefn) { String ruleLhsString = rule.lhs.nodeWithHoles;
-	 * String strLhs[] = ruleLhsString.split("}");
-	 * 
-	 * String ruleRhsString = rule.rhs.nodeWithHoles; String strRhs[] =
-	 * ruleRhsString.split("}");
-	 * 
-	 * // Get Hole Map for definition
-	 * 
-	 * String definitionRule = strLhs[0] + "}"; IASTNode definitionNode =
-	 * getDefinition(selectedNodeAsList); Map<String, List<IASTNode>>
-	 * definitionMatch = new HashMap<String, List<IASTNode>>();
-	 * 
-	 * if (definitionNode != null) { definitionMatch = TTLUtils.match(new
-	 * TTlExpression(definitionRule, NodeType.DeclSpecifier), new
-	 * TTlExpression(definitionNode.getRawSignature(), NodeType.DeclSpecifier));
-	 * }
-	 * 
-	 * // Get Hole Map for declaration String declarationRule = "__ttltype__ " +
-	 * strLhs[1]; IASTNode declarationNode = getDeclaration(selectedNodeAsList);
-	 * Map<String, List<IASTNode>> declarationMatch = new HashMap<String,
-	 * List<IASTNode>>();
-	 * 
-	 * if (declarationNode != null) { declarationMatch = TTLUtils.match(new
-	 * TTlExpression(declarationRule, NodeType.Declaration), new
-	 * TTlExpression(declarationNode.getRawSignature(), NodeType.Declaration));
-	 * }
-	 * 
-	 * // Apply tags and scope rules if (rule.scopeFragmentMap != null &&
-	 * rule.tagValueMap != null) { for (Scope scope :
-	 * rule.scopeFragmentMap.keySet()) { ScopeVisitor s = new
-	 * ScopeVisitor(scope, astRewrite); if
-	 * (definitionMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
-	 * List<IASTNode> scopeMatches =
-	 * definitionMatch.get(rule.scopeFragmentMap.get(scope)); List<IASTNode>
-	 * scopeMatchesNew = new ArrayList<IASTNode>(); for (IASTNode node :
-	 * scopeMatches) { node.accept(s); scopeMatchesNew.add(replaceNodes(node,
-	 * s.nodeReplacements)); s.refreshNodeReplacements(); }
-	 * definitionMatch.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew); }
-	 * else if (declarationMatch.get(rule.scopeFragmentMap.get(scope)) != null)
-	 * { List<IASTNode> scopeMatches =
-	 * declarationMatch.get(rule.scopeFragmentMap.get(scope)); List<IASTNode>
-	 * scopeMatchesNew = new ArrayList<IASTNode>(); for (IASTNode node :
-	 * scopeMatches) { node.accept(s); scopeMatchesNew.add(replaceNodes(node,
-	 * s.nodeReplacements)); s.refreshNodeReplacements(); }
-	 * declarationMatch.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
-	 * } } }
-	 * 
-	 * TypeMigration typeMigration = null; // Apply Rule for definition if
-	 * (definitionNode != null) { TTlExpression ttlConstructExpression = new
-	 * TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier); IASTNode
-	 * nodeToReplace = null; for (Scope s : rule.scopeFragmentMap.keySet()) { if
-	 * (!s.tagValueMap.isEmpty()) { nodeToReplace =
-	 * TTLUtils.construct(definitionMatch, ttlConstructExpression,
-	 * s.tagValueMap); } } if (nodeToReplace == null) { nodeToReplace =
-	 * TTLUtils.construct(definitionMatch, ttlConstructExpression); }
-	 * astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup(
-	 * "API Migration")); typeMigration =
-	 * getTypeMigration((CPPASTCompositeTypeSpecifier) definitionNode,
-	 * (CPPASTCompositeTypeSpecifier) nodeToReplace); }
-	 * 
-	 * // Apply rule for declaration if (declarationNode != null) {
-	 * TTlExpression ttlConstructExpression = new
-	 * TTlExpression(typeMigration.newTypeName + " " + strRhs[1],
-	 * NodeType.Declaration); IASTNode nodeToReplace = null; for (Scope s :
-	 * rule.scopeFragmentMap.keySet()) { if (!s.tagValueMap.isEmpty()) {
-	 * nodeToReplace = TTLUtils.construct(declarationMatch,
-	 * ttlConstructExpression, s.tagValueMap); } } if (nodeToReplace == null) {
-	 * nodeToReplace = TTLUtils.construct(declarationMatch,
-	 * ttlConstructExpression); } astRewrite.replace(declarationNode,
-	 * nodeToReplace, new TextEditGroup("API Migration")); String oldName =
-	 * getVarNameFromDeclaration((IASTDeclaration) declarationNode); String
-	 * newName = getVarNameFromDeclaration((IASTDeclaration) nodeToReplace); ;
-	 * migrations.varMigrations.put(Pair.of(oldName, newName), typeMigration); }
-	 * } return true; }
-	 */
-
-	public static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) throws Exception {
-		// TODO: Make rule apply properly and perform the transformation
+	public static boolean applyRule(TTlRule rule, List<IASTNode> selectedNodeAsList) throws Exception { // TODO:
+																										// Make
+																										// rule
+																										// apply
+																										// properly
+																										// and
+																										// perform
+																										// the
+																										// transformation
 		System.out.println("applying rule to ");
 		for (IASTNode node : selectedNodeAsList) {
 			System.out.println(node.getRawSignature());
@@ -350,19 +238,12 @@ public class SearchAlgorithm {
 			TTlExpression ttlPattern = rule.lhs;
 			TTlExpression ttlFragmentToMatch = new TTlExpression(selectedNodeAsList.get(0).getRawSignature(),
 					rule.type);
-			// Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern,
-			// ttlFragmentToMatch);
-			Map<String, String> holeMap = TTLUtils.getHoleMap(ttlPattern.nodeWithHoles,
-					ttlFragmentToMatch.nodeWithHoles);
+			Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
 			if (rule.scopeFragmentMap != null && rule.tagValueMap != null) {
 				for (Scope scope : rule.scopeFragmentMap.keySet()) {
 					ScopeVisitor s = new ScopeVisitor(scope, astRewrite);
 					if (holeMap.get(rule.scopeFragmentMap.get(scope)) != null) {
-						List<IASTNode> scopeMatches = new ArrayList<IASTNode>() {
-							{
-								add(TTLUtils.getNodeFromString(holeMap.get(rule.scopeFragmentMap.get(scope))));
-							}
-						};
+						List<IASTNode> scopeMatches = holeMap.get(rule.scopeFragmentMap.get(scope));
 						List<IASTNode> scopeMatchesNew = new ArrayList<IASTNode>();
 						for (IASTNode node : scopeMatches) {
 							node.accept(s);
@@ -370,11 +251,7 @@ public class SearchAlgorithm {
 							scope.setReferenceMap(s.referenceReplacements);
 							s.refreshNodeReplacements();
 						}
-						String scopeMatchesNewAsString = "";
-						for (IASTNode node : scopeMatchesNew) {
-							scopeMatchesNewAsString += node.getRawSignature();
-						}
-						holeMap.put(rule.scopeFragmentMap.get(scope), scopeMatchesNewAsString);
+						holeMap.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
 					}
 				}
 			}
@@ -383,18 +260,21 @@ public class SearchAlgorithm {
 			for (Scope s : rule.scopeFragmentMap.keySet()) {
 				if (!s.tagValueMap.isEmpty()) {
 					if (!s.referenceMap.isEmpty()) {
-						nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression, s.tagValueMap,
+						nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap,
 								s.referenceMap);
 					} else {
-						nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression, s.tagValueMap);
+						nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression, s.tagValueMap);
 					}
 				}
 			}
 			if (nodeToReplace == null) {
-				nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression);
+				nodeToReplace = TTLUtils.construct(holeMap, ttlConstructExpression);
 			}
-			if (nodeToReplace instanceof CPPASTCompoundStatement) {
-				// TODO: HACK here please change appropriately
+			if (nodeToReplace instanceof CPPASTCompoundStatement) { // TODO:
+																	// HACK here
+																	// please
+																	// change
+																	// appropriately
 				if (((CPPASTCompoundStatement) nodeToReplace).getStatements().length == 2) {
 					astRewrite.replace(selectedNodeAsList.get(0),
 							((CPPASTCompoundStatement) nodeToReplace).getStatements()[1],
@@ -423,24 +303,25 @@ public class SearchAlgorithm {
 
 			String definitionRule = strLhs[0] + "}";
 			IASTNode definitionNode = getDefinition(selectedNodeAsList);
-			Map<String, String> definitionMatch = new HashMap<String, String>();
+			Map<String, List<IASTNode>> definitionMatch = new HashMap<String, List<IASTNode>>();
 
 			if (definitionNode != null) {
-				definitionMatch = TTLUtils.getHoleMap(definitionRule, definitionNode.getRawSignature());
+				definitionMatch = TTLUtils.match(new TTlExpression(definitionRule, NodeType.DeclSpecifier),
+						new TTlExpression(definitionNode.getRawSignature(), NodeType.DeclSpecifier));
 			}
 
 			// Get Hole Map for declaration
 			String declarationRule = "__ttltype__ " + strLhs[1];
-			declarationRule = declarationRule.replaceAll("\\s+", " ");
 			IASTNode declarationNode = getDeclaration(selectedNodeAsList);
-			Map<String, String> declarationMatch = new HashMap<String, String>();
+			Map<String, List<IASTNode>> declarationMatch = new HashMap<String, List<IASTNode>>();
 
 			if (declarationNode != null) {
-				declarationMatch = TTLUtils.getHoleMap(declarationRule, declarationNode.getRawSignature());
+				declarationMatch = TTLUtils.match(new TTlExpression(declarationRule, NodeType.Declaration),
+						new TTlExpression(declarationNode.getRawSignature(), NodeType.Declaration));
 			}
 
 			// Apply tags and scope rules
-			/*if (rule.scopeFragmentMap != null && rule.tagValueMap != null) {
+			if (rule.scopeFragmentMap != null && rule.tagValueMap != null) {
 				for (Scope scope : rule.scopeFragmentMap.keySet()) {
 					ScopeVisitor s = new ScopeVisitor(scope, astRewrite);
 					if (definitionMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
@@ -463,20 +344,19 @@ public class SearchAlgorithm {
 						declarationMatch.put(rule.scopeFragmentMap.get(scope), scopeMatchesNew);
 					}
 				}
-			}*/
+			}
 
-			TypeMigration typeMigration = null;
-			// Apply Rule for definition
+			TypeMigration typeMigration = null; // Apply Rule for definition
 			if (definitionNode != null) {
 				TTlExpression ttlConstructExpression = new TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier);
 				IASTNode nodeToReplace = null;
 				for (Scope s : rule.scopeFragmentMap.keySet()) {
 					if (!s.tagValueMap.isEmpty()) {
-						nodeToReplace = TTLUtils.constructUsingHoleMap(definitionMatch, ttlConstructExpression, s.tagValueMap);
+						nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression, s.tagValueMap);
 					}
 				}
 				if (nodeToReplace == null) {
-					nodeToReplace = TTLUtils.constructUsingHoleMap(definitionMatch, ttlConstructExpression);
+					nodeToReplace = TTLUtils.construct(definitionMatch, ttlConstructExpression);
 				}
 				astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup("API Migration"));
 				typeMigration = getTypeMigration((CPPASTCompositeTypeSpecifier) definitionNode,
@@ -490,11 +370,11 @@ public class SearchAlgorithm {
 				IASTNode nodeToReplace = null;
 				for (Scope s : rule.scopeFragmentMap.keySet()) {
 					if (!s.tagValueMap.isEmpty()) {
-						nodeToReplace = TTLUtils.constructUsingHoleMap(declarationMatch, ttlConstructExpression, s.tagValueMap);
+						nodeToReplace = TTLUtils.construct(declarationMatch, ttlConstructExpression, s.tagValueMap);
 					}
 				}
 				if (nodeToReplace == null) {
-					nodeToReplace = TTLUtils.constructUsingHoleMap(declarationMatch, ttlConstructExpression);
+					nodeToReplace = TTLUtils.construct(declarationMatch, ttlConstructExpression);
 				}
 				astRewrite.replace(declarationNode, nodeToReplace, new TextEditGroup("API Migration"));
 				String oldName = getVarNameFromDeclaration((IASTDeclaration) declarationNode);
@@ -504,6 +384,153 @@ public class SearchAlgorithm {
 			}
 		}
 		return true;
+
+	}
+
+	/*
+	 * public static boolean applyRule(TTlRule rule, List<IASTNode>
+	 * selectedNodeAsList) throws Exception { // TODO: Make rule apply properly
+	 * and perform the transformation System.out.println("applying rule to ");
+	 * for (IASTNode node : selectedNodeAsList) {
+	 * System.out.println(node.getRawSignature()); } if
+	 * (selectedNodeAsList.size() == 1) { TTlExpression ttlPattern = rule.lhs;
+	 * TTlExpression ttlFragmentToMatch = new
+	 * TTlExpression(selectedNodeAsList.get(0).getRawSignature(), rule.type); //
+	 * Map<String, List<IASTNode>> holeMap = TTLUtils.match(ttlPattern, //
+	 * ttlFragmentToMatch); Map<String, String> holeMap =
+	 * TTLUtils.getHoleMap(ttlPattern.nodeWithHoles,
+	 * ttlFragmentToMatch.nodeWithHoles); if (rule.scopeFragmentMap != null &&
+	 * rule.tagValueMap != null) { for (Scope scope :
+	 * rule.scopeFragmentMap.keySet()) { ScopeVisitor s = new
+	 * ScopeVisitor(scope, astRewrite); if
+	 * (holeMap.get(rule.scopeFragmentMap.get(scope)) != null) { List<IASTNode>
+	 * scopeMatches = new ArrayList<IASTNode>() { {
+	 * add(TTLUtils.getNodeFromString(holeMap.get(rule.scopeFragmentMap.get(
+	 * scope)))); } }; List<IASTNode> scopeMatchesNew = new
+	 * ArrayList<IASTNode>(); for (IASTNode node : scopeMatches) {
+	 * node.accept(s); scopeMatchesNew.add(replaceNodes(node,
+	 * s.nodeReplacements)); scope.setReferenceMap(s.referenceReplacements);
+	 * s.refreshNodeReplacements(); } String scopeMatchesNewAsString = ""; for
+	 * (IASTNode node : scopeMatchesNew) { scopeMatchesNewAsString +=
+	 * node.getRawSignature(); } holeMap.put(rule.scopeFragmentMap.get(scope),
+	 * scopeMatchesNewAsString); } } } TTlExpression ttlConstructExpression =
+	 * rule.rhs; IASTNode nodeToReplace = null; for (Scope s :
+	 * rule.scopeFragmentMap.keySet()) { if (!s.tagValueMap.isEmpty()) { if
+	 * (!s.referenceMap.isEmpty()) { nodeToReplace =
+	 * TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression,
+	 * s.tagValueMap, s.referenceMap); } else { nodeToReplace =
+	 * TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression,
+	 * s.tagValueMap); } } } if (nodeToReplace == null) { nodeToReplace =
+	 * TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression); } if
+	 * (nodeToReplace instanceof CPPASTCompoundStatement) { // TODO: HACK here
+	 * please change appropriately if (((CPPASTCompoundStatement)
+	 * nodeToReplace).getStatements().length == 2) {
+	 * astRewrite.replace(selectedNodeAsList.get(0), ((CPPASTCompoundStatement)
+	 * nodeToReplace).getStatements()[1], new TextEditGroup("API Migration"));
+	 * astRewrite.insertBefore(selectedNodeAsList.get(0).getParent(),
+	 * selectedNodeAsList.get(0), ((CPPASTCompoundStatement)
+	 * nodeToReplace).getStatements()[0], new TextEditGroup("API Migration")); }
+	 * if (((CPPASTCompoundStatement) nodeToReplace).getStatements().length ==
+	 * 1) { astRewrite.replace(selectedNodeAsList.get(0),
+	 * ((CPPASTCompoundStatement) nodeToReplace).getStatements()[0], new
+	 * TextEditGroup("API Migration")); }
+	 * 
+	 * } else { astRewrite.replace(selectedNodeAsList.get(0), nodeToReplace, new
+	 * TextEditGroup("API Migration")); } } else if (rule != null && rule.type
+	 * == NodeType.DeclDefn) { String ruleLhsString = rule.lhs.nodeWithHoles;
+	 * String strLhs[] = ruleLhsString.split("}");
+	 * 
+	 * String ruleRhsString = rule.rhs.nodeWithHoles; String strRhs[] =
+	 * ruleRhsString.split("}");
+	 * 
+	 * // Get Hole Map for definition
+	 * 
+	 * String definitionRule = strLhs[0] + "}"; IASTNode definitionNode =
+	 * getDefinition(selectedNodeAsList); Map<String, String> definitionMatch =
+	 * new HashMap<String, String>();
+	 * 
+	 * if (definitionNode != null) { definitionMatch =
+	 * TTLUtils.getHoleMap(definitionRule, definitionNode.getRawSignature()); }
+	 * 
+	 * // Get Hole Map for declaration String declarationRule = "__ttltype__ " +
+	 * strLhs[1]; declarationRule = declarationRule.replaceAll("\\s+", " ");
+	 * IASTNode declarationNode = getDeclaration(selectedNodeAsList);
+	 * Map<String, String> declarationMatch = new HashMap<String, String>();
+	 * 
+	 * if (declarationNode != null) { declarationMatch =
+	 * TTLUtils.getHoleMap(declarationRule, declarationNode.getRawSignature());
+	 * }
+	 * 
+	 * // Apply tags and scope rules if (rule.scopeFragmentMap != null &&
+	 * rule.tagValueMap != null) { for (Scope scope :
+	 * rule.scopeFragmentMap.keySet()) { ScopeVisitor s = new
+	 * ScopeVisitor(scope, astRewrite); if
+	 * (definitionMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
+	 * List<IASTNode> scopeMatches = getNodesFromString(
+	 * definitionMatch.get(rule.scopeFragmentMap.get(scope))); List<IASTNode>
+	 * scopeMatchesNew = new ArrayList<IASTNode>(); for (IASTNode node :
+	 * scopeMatches) { node.accept(s); scopeMatchesNew.add(replaceNodes(node,
+	 * s.nodeReplacements)); s.refreshNodeReplacements(); }
+	 * definitionMatch.put(rule.scopeFragmentMap.get(scope),
+	 * getStringFromNodes(scopeMatchesNew)); } else if
+	 * (declarationMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
+	 * List<IASTNode> scopeMatches = getNodesFromString(
+	 * declarationMatch.get(rule.scopeFragmentMap.get(scope))); List<IASTNode>
+	 * scopeMatchesNew = new ArrayList<IASTNode>(); for (IASTNode node :
+	 * scopeMatches) { node.accept(s); scopeMatchesNew.add(replaceNodes(node,
+	 * s.nodeReplacements)); s.refreshNodeReplacements(); }
+	 * declarationMatch.put(rule.scopeFragmentMap.get(scope),
+	 * getStringFromNodes(scopeMatchesNew)); } } }
+	 * 
+	 * TypeMigration typeMigration = null; // Apply Rule for definition if
+	 * (definitionNode != null) { TTlExpression ttlConstructExpression = new
+	 * TTlExpression(strRhs[0] + "}", NodeType.DeclSpecifier); IASTNode
+	 * nodeToReplace = null; for (Scope s : rule.scopeFragmentMap.keySet()) { if
+	 * (!s.tagValueMap.isEmpty()) { nodeToReplace =
+	 * TTLUtils.constructUsingHoleMap(definitionMatch, ttlConstructExpression,
+	 * s.tagValueMap); } } if (nodeToReplace == null) { nodeToReplace =
+	 * TTLUtils.constructUsingHoleMap(definitionMatch, ttlConstructExpression);
+	 * } astRewrite.replace(definitionNode, nodeToReplace, new TextEditGroup(
+	 * "API Migration")); typeMigration =
+	 * getTypeMigration((CPPASTCompositeTypeSpecifier) definitionNode,
+	 * (CPPASTCompositeTypeSpecifier) nodeToReplace); }
+	 * 
+	 * // Apply rule for declaration if (declarationNode != null) {
+	 * TTlExpression ttlConstructExpression = new
+	 * TTlExpression(typeMigration.newTypeName + " " + strRhs[1],
+	 * NodeType.Declaration); IASTNode nodeToReplace = null; for (Scope s :
+	 * rule.scopeFragmentMap.keySet()) { if (!s.tagValueMap.isEmpty()) {
+	 * nodeToReplace = TTLUtils.constructUsingHoleMap(declarationMatch,
+	 * ttlConstructExpression, s.tagValueMap); } } if (nodeToReplace == null) {
+	 * nodeToReplace = TTLUtils.constructUsingHoleMap(declarationMatch,
+	 * ttlConstructExpression); } astRewrite.replace(declarationNode,
+	 * nodeToReplace, new TextEditGroup("API Migration")); String oldName =
+	 * getVarNameFromDeclaration((IASTDeclaration) declarationNode); String
+	 * newName = getVarNameFromDeclaration((IASTDeclaration) nodeToReplace); ;
+	 * migrations.varMigrations.put(Pair.of(oldName, newName), typeMigration); }
+	 * } return true; }
+	 */
+
+	private static String getStringFromNodes(List<IASTNode> nodesAsList) throws Exception {
+		String returnNodes = "";
+		for (IASTNode node : nodesAsList) {
+			returnNodes = returnNodes + " " + node.getRawSignature();
+		}
+		returnNodes.replaceAll("\\s+", " ");
+		return returnNodes;
+	}
+
+	private static List<IASTNode> getNodesFromString(String nodeAsString) throws Exception {
+		List<IASTNode> returnNodes = new ArrayList<IASTNode>();
+		IASTNode nodes = TTLUtils.getNodeFromString(nodeAsString);
+		if (nodes instanceof CPPASTCompoundStatement) {
+			for (IASTStatement stat : ((CPPASTCompoundStatement) nodes).getStatements()) {
+				returnNodes.add(stat);
+			}
+		} else {
+			returnNodes.add(nodes);
+		}
+		return returnNodes;
 	}
 
 	private static String getVarNameFromDeclaration(IASTDeclaration declarationNode) {
@@ -582,7 +609,7 @@ public class SearchAlgorithm {
 		for (TTlRule rule : rules) {
 			if (TTLUtils.checkType(rule.type, selectedNode)) {
 				TTlExpression ttlFragmentToMatch = new TTlExpression(selectedNode.getRawSignature(), rule.type);
-				if (TTLUtils.match(rule.lhs, ttlFragmentToMatch).size() > 0) {
+				if (TTLUtils.getHoleMap(rule.lhs.nodeWithHoles, ttlFragmentToMatch.nodeWithHoles).size() > 0) {
 					return rule;
 				}
 			}

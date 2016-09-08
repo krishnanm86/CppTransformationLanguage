@@ -14,29 +14,21 @@ import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
-import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTArraySubscriptExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTBinaryExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFunctionCallExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTIdExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
-import org.eclipse.text.edits.TextEditGroup;
-
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
-@SuppressWarnings("restriction")
-public class ScopeVisitor extends ASTVisitor {
+@SuppressWarnings({ "restriction" })
+public class ScopeVisitorNew extends ASTVisitor {
 
 	Scope scope;
-	private ASTRewrite astRewrite;
-	Map<IASTNode, IASTNode> nodeReplacements;
+	Map<String, String> nodeReplacements;
 	Map<String, String> referenceReplacements;
-
-	public ASTRewrite getAstRewrite() {
-		return astRewrite;
-	}
+	Map<String, String> returnedTagValues;
 
 	public Scope getScope() {
 		return scope;
@@ -46,11 +38,11 @@ public class ScopeVisitor extends ASTVisitor {
 		this.scope = scope;
 	}
 
-	public Map<IASTNode, IASTNode> getNodeReplacements() {
+	public Map<String, String> getNodeReplacements() {
 		return nodeReplacements;
 	}
 
-	public void setNodeReplacements(Map<IASTNode, IASTNode> nodeReplacements) {
+	public void setNodeReplacements(Map<String, String> nodeReplacements) {
 		this.nodeReplacements = nodeReplacements;
 	}
 
@@ -62,15 +54,11 @@ public class ScopeVisitor extends ASTVisitor {
 		this.referenceReplacements = referenceReplacements;
 	}
 
-	public void setAstRewrite(ASTRewrite astRewrite) {
-		this.astRewrite = astRewrite;
-	}
-
-	public ScopeVisitor(Scope scope, ASTRewrite astRewrite) {
+	public ScopeVisitorNew(Scope scope) {
 		this.scope = scope;
-		this.astRewrite = astRewrite;
-		nodeReplacements = new HashMap<IASTNode, IASTNode>();
+		nodeReplacements = new HashMap<String, String>();
 		referenceReplacements = new HashMap<String, String>();
+		returnedTagValues = new HashMap<String, String>();
 		shouldVisitDeclarations = true;
 		shouldVisitStatements = true;
 		shouldVisitExpressions = true;
@@ -188,53 +176,23 @@ public class ScopeVisitor extends ASTVisitor {
 	private void applyRule(IASTNode node, NodeType type) {
 		for (ScopeRule r : scope.rules) {
 			if (r.type == type) {
-				TTlExpression ttlPattern = new TTlExpression(r.lhs, type);
-				TTlExpression ttlConstructExpression = new TTlExpression(r.Rhs, type);
-				TTlExpression ttlFragmentToMatch = new TTlExpression(node.getRawSignature(), type);
-				Map<String, List<IASTNode>> holeMap = null;
+				String pattern = r.lhs;
+				String constructExpression = r.Rhs;
+				String fragmentToMatch = node.getRawSignature();
+				Map<String, String> holeMap = null;
 				try {
-					holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
+					holeMap = TTLUtils.getHoleMapRemoveLastSemiColon(pattern, fragmentToMatch);
 					if (holeMap.size() > 0) {
-						TTLUtils.printHoleMap(holeMap);
-						scope.tagValueMap.put(node.getRawSignature(),
-								TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
-						if (r.tagUpdate != null) {
-							for (WhereCondition whereClaus : r.tagUpdate.whereClauses) {
-								whereClaus.setHoleMap(holeMap);
-							}
-							r.tagUpdate.setTagValue();
-							String tagKey = r.tagUpdate.tagname;
-							if (scope.tagValueMap.containsKey(tagKey)) {
-								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdate.tagvalue)) {
-									scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
-								}
-							} else {
-								if (r.tagUpdate.tagvalue.startsWith(TTLUtils.ttlHolePrefix)) {
-									scope.tagValueMap.put(tagKey,
-											holeMap.get(r.tagUpdate.tagvalue).get(0).getRawSignature());
-								} else {
-									scope.tagValueMap.put(tagKey, r.tagUpdate.tagvalue);
-								}
-							}
+						// Transform the code
+						String transformedFragment = TTLUtils
+								.constructUsingHoleMap(holeMap, new TTlExpression(constructExpression, r.type))
+								.getRawSignature();
+						nodeReplacements.put(fragmentToMatch, transformedFragment);
+						// Update the tags without where clause
+						updateTagWithoutWhereClaus(r.tagUpdates);
 
-						} else {
-							scope.tagValueMap.put(node.getRawSignature(),
-									TTLUtils.construct(holeMap, ttlConstructExpression).getRawSignature());
-							for (String tagKey : r.tagUpdates.keySet()) {
-								String tagValue = r.tagUpdates.get(tagKey);
-								if (tagValue.startsWith(TTLUtils.ttlHolePrefix)) {
-									tagValue = holeMap.get(tagValue).get(0).getRawSignature();
-								}
-								if (scope.tagValueMap.containsKey(tagKey)) {
-									if (!scope.tagValueMap.get(tagKey).equals(tagValue)) {
-										scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
-									}
-								} else {
-									scope.tagValueMap.put(tagKey, tagValue);
-
-								}
-							}
-						}
+						// Update the tags with where clause
+						updateTagWithWhereClause(r.tagUpdate, holeMap);
 					}
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
@@ -243,68 +201,49 @@ public class ScopeVisitor extends ASTVisitor {
 			}
 		}
 	}
-	
-	/*private void applyRule(IASTNode node, NodeType type) {
-		for (ScopeRule r : scope.rules) {
-			if (r.type == type) {
-				TTlExpression ttlPattern = new TTlExpression(r.lhs, type);
-				TTlExpression ttlConstructExpression = new TTlExpression(r.Rhs, type);
-				TTlExpression ttlFragmentToMatch = new TTlExpression(node.getRawSignature(), type);
-				Map<String, String> holeMap = null;
-				try {
-					holeMap = TTLUtils.getHoleMapRemoveLastSemiColon(ttlPattern.nodeWithHoles, ttlFragmentToMatch.nodeWithHoles);
-					if (holeMap.size() > 0) {
-						System.out.println(holeMap);
-						scope.tagValueMap.put(node.getRawSignature(),
-								TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression).getRawSignature());
-						if (r.tagUpdate != null) {
-							for (WhereCondition whereClaus : r.tagUpdate.whereClauses) {
-								//whereClaus.setHoleMap(holeMap);
-							}
-							r.tagUpdate.setTagValue();
-							String tagKey = r.tagUpdate.tagname;
-							if (scope.tagValueMap.containsKey(tagKey)) {
-								if (!scope.tagValueMap.get(tagKey).equals(r.tagUpdate.tagvalue)) {
-									scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
-								}
-							} else {
-								if (r.tagUpdate.tagvalue.startsWith(TTLUtils.ttlHolePrefix)) {
-									scope.tagValueMap.put(tagKey,
-											holeMap.get(r.tagUpdate.tagvalue));
-								} else {
-									scope.tagValueMap.put(tagKey, r.tagUpdate.tagvalue);
-								}
-							}
 
-						} else {
-							scope.tagValueMap.put(node.getRawSignature(),
-									TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression).getRawSignature());
-							for (String tagKey : r.tagUpdates.keySet()) {
-								String tagValue = r.tagUpdates.get(tagKey);
-								if (tagValue.startsWith(TTLUtils.ttlHolePrefix)) {
-									tagValue = holeMap.get(tagValue);
-								}
-								if (scope.tagValueMap.containsKey(tagKey)) {
-									if (!scope.tagValueMap.get(tagKey).equals(tagValue)) {
-										scope.tagValueMap.put(tagKey, ScopeRule.tagEmpty);
-									}
-								} else {
-									scope.tagValueMap.put(tagKey, tagValue);
-
-								}
-							}
-						}
-					}
-				} catch (Exception e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
+	private void updateTagWithWhereClause(TagUpdate tagUpdate, Map<String, String> holeMap) {
+		if (tagUpdate != null) {
+			for (WhereCondition whereClaus : tagUpdate.whereClauses) {
+				whereClaus.setHoleMapNew(holeMap);
+			}
+			try {
+				tagUpdate.setTagValueNew();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			String tagKey = tagUpdate.tagname;
+			if (returnedTagValues.containsKey(tagKey)) {
+				if (!returnedTagValues.get(tagKey).equals(tagUpdate.tagvalue)) {
+					returnedTagValues.put(tagKey, ScopeRule.tagEmpty);
+				}
+			} else {
+				if (tagUpdate.tagvalue.startsWith(TTLUtils.ttlHolePrefix)) {
+					returnedTagValues.put(tagKey, holeMap.get(tagUpdate.tagvalue));
+				} else {
+					returnedTagValues.put(tagKey, tagUpdate.tagvalue);
 				}
 			}
+
 		}
-	}*/
+
+	}
+
+	private void updateTagWithoutWhereClaus(Map<String, String> tagUpdates) {
+		for (String tag : tagUpdates.keySet()) {
+			// Find out if tag value has existing update
+			if (returnedTagValues.containsKey(tag)) {
+				if (!returnedTagValues.get(tag).equals(tagUpdates.get(tag))) {
+					returnedTagValues.put(tag, ScopeRule.tagEmpty);
+				}
+			} else {
+				returnedTagValues.put(tag, tagUpdates.get(tag));
+			}
+		}
+	}
 
 	public void refreshNodeReplacements() {
-		nodeReplacements = new HashMap<IASTNode, IASTNode>();
+		nodeReplacements = new HashMap<String, String>();
 	}
 
 }

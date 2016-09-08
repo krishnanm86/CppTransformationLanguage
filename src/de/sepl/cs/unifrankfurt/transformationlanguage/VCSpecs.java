@@ -103,14 +103,14 @@ public class VCSpecs {
 		inttagUpdates.put("__tagttlvctype__", "int_v");
 		List<ScopeRule> structScopeRules = new ArrayList<ScopeRule>();
 		String lhs = "int __ttla__;";
-		String rhs = inttagUpdates.get("__tagttlvctype__") + "   __ttla__v";
+		String rhs = inttagUpdates.get("__tagttlvctype__") + "   __ttla__v;";
 		ScopeRule intRule = new ScopeRule(lhs, rhs, NodeType.Declaration, inttagUpdates);
 		structScopeRules.add(intRule);
 
 		Map<String, String> floattagUpdate = new HashMap<String, String>();
 		floattagUpdate.put("__tagttlvctype__", "float_v");
 		String lhsfloat = "float __ttla__;";
-		String rhsfloat = floattagUpdate.get("__tagttlvctype__") + "   __ttla__v";
+		String rhsfloat = floattagUpdate.get("__tagttlvctype__") + "   __ttla__v;";
 		ScopeRule floatRule = new ScopeRule(lhsfloat, rhsfloat, NodeType.Declaration, floattagUpdate);
 		structScopeRules.add(floatRule);
 

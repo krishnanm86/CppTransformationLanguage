@@ -14,12 +14,7 @@ public class TTlExpression {
 
 	public TTlExpression(String nodeWithHoles, NodeType type) {
 		super();
-		try {
-			this.nodeWithHoles = normalize(nodeWithHoles);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		this.nodeWithHoles = nodeWithHoles.replaceAll("\\s+", " ");
 		this.type = type;
 	}
 

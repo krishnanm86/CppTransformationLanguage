@@ -56,7 +56,12 @@ public class StringTemplate {
 		}
 		Map<String, String> results = new HashMap<>();
 		for (String parameter : parameters) {
-			results.put("__ttl" + parameter + "__", matcher.group(parameter));
+			String parameterName = "__ttl" + parameter + "__";
+			String parameterValue = matcher.group(parameter);
+			if (template.charAt(template.indexOf(parameterName) + parameterName.length()) == ';') {
+				parameterValue = parameterValue + ";";
+			}
+			results.put(parameterName, parameterValue);
 		}
 		return results;
 	}
