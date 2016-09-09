@@ -22,14 +22,23 @@ public class TTLTest {
 		TTlExpression ttlPattern = new TTlExpression(pattern, NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(transform, NodeType.Statement);
 		TTlExpression ttlFragmentToMatch = new TTlExpression("PolarCoordinate output[1000];", NodeType.Statement);
-		StringTemplate matcher = new StringTemplate(ttlPattern.nodeWithHoles);
-		Map<String, String> holeMap = matcher.parse(ttlFragmentToMatch.nodeWithHoles);
-		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ttlConstructExpression).getRawSignature());
 		
+
 		TTlExpression ttlForPattern = new TTlExpression(
-				"for(int i = 0 ; i < __ttllimit__; __ttli__++ ) {__ttlforbody__;  }", NodeType.Statement);
+				"for(int i = 0 ; i < __ttllimit__ ; __ttli__++ ) { __ttlforbody__; }", NodeType.Statement);
 		TTlExpression ttlForConstructExpression = new TTlExpression(
-				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/1000::size; __ttli__++ ) {__ttlforbody__;  }",
+				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/float_v::size; __ttli__++ ) { __ttlforbody__;  }",
 				NodeType.Statement);
+		TTlExpression ttlFragmentToMatchFor = new TTlExpression(
+				"for(int i = 0 ; i < 1000 ; i++ ) { float temp1 = input[i].x; float temp2 = input[i].y; output[i].r = std::sqrt((x * x) + (y * y)); output[i].phi = std::atan2(y, x) * 57.295780181884765625f; // 180/pi if (output[i].phi < 0.f) { output[i].phi += 360.f; }; }",
+				NodeType.Statement);
+		
+		TTlExpression ttlFragmentToMatchFor1 = new TTlExpression(
+				"for(int i = 0 ; i < 1000 ; i++ ) { FN1(); }",
+				NodeType.Statement);
+		StringTemplate matcher = new StringTemplate(ttlForPattern.nodeWithHoles);
+		Map<String, String> holeMap = matcher.parse(ttlFragmentToMatchFor.nodeWithHoles);
+		System.out.println(holeMap);
+		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ttlForConstructExpression).getRawSignature());
 	}
 }
