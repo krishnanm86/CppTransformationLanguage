@@ -40,7 +40,6 @@ public class GMPSpecs2 {
 		TTlExpression ruleConstructExpression26 = new TTlExpression("mpz_init_set_si(__ttlp__,__ttlp2__);", NodeType.Statement);
 		rules.add(new TTlRule(rulePattern26, ruleConstructExpression26, NodeType.Statement,
 				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
-		// 30
 		// -mpz_cmp(e1, e2)
 		// +(e1 - e2)
 		TTlExpression rulePattern30 = new TTlExpression("(__ttlp__ - __ttlp2__);", NodeType.Statement);

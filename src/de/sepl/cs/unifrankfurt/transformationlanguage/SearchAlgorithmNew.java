@@ -16,12 +16,14 @@ import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
+@SuppressWarnings("restriction")
 class NodewRule {
 	List<IASTNode> nodes; // List is only for decldefn rules.
 	TTlRule rule;
@@ -40,11 +42,12 @@ public class SearchAlgorithmNew {
 	public static Map<List<IASTNode>, TTlRule> AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 	private static Set<TTlRule> rules = new HashSet<TTlRule>();
 	private static Queue<IASTNode> WORKLIST = new LinkedList<IASTNode>();
-	private static Queue<IASTNode> DONE = new LinkedList<IASTNode>();
+	private static Set<IASTNode> DONE = new HashSet<IASTNode>();
 	private static NameVisitor visitor = new NameVisitor();
 	public static IASTTranslationUnit ast;
 	private static ASTRewrite astRewrite;
 	public static Migrations migrations = new Migrations();
+	public static boolean isLastRuleFail = false;
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
 		System.out.println("Beginning Search.....");
@@ -68,18 +71,110 @@ public class SearchAlgorithmNew {
 
 	private static void WorkBlock(IASTNode SN) throws Exception {
 		NodewRule Nr = FindRule(SN);
-		List<IASTNode> Ndash = SUBST(Nr.nodes, Nr.rule);
+		List<IASTNode> Ndash = null;
+		if (Nr != null) {
+			Ndash = SUBST(Nr.nodes, Nr.rule);
+			addToSet(DONE, Nr.nodes, Ndash);
+
+		}
+		if (!isLastRuleFail) // N' not equals Fail scenario
+		{
+			if (Nr != null && Ndash != null) {
+				recordInAST(Nr, Ndash);
+			}
+			List<IASTNode> N = new ArrayList<IASTNode>();
+			N.add(SN);
+			List<IASTNode> D = getDependencies(N);
+
+			// TODO: Remove
+			System.out.println("The dependencies of ");
+			printListNodes(N);
+			System.out.println("are");
+
+			for (IASTNode d : D) {
+				if (d != null && !WORKLIST.contains(d) && !DONE.contains(d)) {
+					System.out.println("-------------------");
+					System.out.println(d.getClass().getName());
+					System.out.println(d.getRawSignature());
+					WORKLIST.add(d);
+				}
+			}
+		}
+
+	}
+
+	private static List<IASTNode> getDependencies(List<IASTNode> nodes) {
+		List<IASTNode> dependencies = new ArrayList<IASTNode>();
+		for (IASTNode node : nodes) {
+			node.accept(visitor);
+			addParent(node, dependencies);
+			for (IASTName objectref : visitor.getObjectrefs()) {
+				if (!visitor.visitedNames.contains(objectref)) {
+					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
+						dependencies.add(use);
+					}
+					visitor.visitedNames.add(objectref);
+				}
+			}
+			if (!(node instanceof CPPASTCompositeTypeSpecifier)) {
+				for (IASTName typeref : visitor.getTyperefs()) {
+					if (!visitor.visitedNames.contains(typeref)) {
+						dependencies.add(TransformationUtils.getDefns(typeref));
+						visitor.visitedNames.add(typeref);
+					}
+				}
+			}
+		}
+		return dependencies;
+	}
+
+	private static void addParent(IASTNode node, List<IASTNode> dependencies) {
+		if (!(node.getParent() instanceof IASTTranslationUnit))
+			dependencies.add(node.getParent());
+		{
+			if (node.getParent() != null) {
+				dependencies.add(node.getParent().getParent());
+			}
+		}
+	}
+
+	private static void addToSet(Set<IASTNode> done, List<IASTNode> nodes, List<IASTNode> ndash) {
+		for (IASTNode node : nodes) {
+			done.add(node);
+		}
+		for (IASTNode node : ndash) {
+			done.add(node);
+		}
+	}
+
+	private static void recordInAST(NodewRule Nr, List<IASTNode> Ndash) {
+		if (Nr.nodes.size() == 1 && Ndash.size() == 1) {
+			printReplacingString(Nr.nodes.get(0), Ndash.get(0));
+			astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
+		} else if (Nr.rule.type == NodeType.DeclDefn && Nr.nodes.size() == 2 && Ndash.size() == 2) {
+			IASTNode definitionNr = getDefinition(Nr.nodes);
+			IASTNode definitionNdash = getDefinition(Ndash);
+			IASTNode declarationNr = getDeclaration(Nr.nodes);
+			IASTNode declarationNdash = getDeclaration(Ndash);
+
+			printReplacingString(declarationNr, declarationNdash);
+			printReplacingString(definitionNr, declarationNdash);
+
+			astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
+			astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
+		}
 	}
 
 	private static List<IASTNode> SUBST(List<IASTNode> nodes, TTlRule rule) throws Exception {
 
+		List<IASTNode> returnNode = new ArrayList<IASTNode>();
 		if (rule.type != NodeType.DeclDefn) {
 			if (nodes.size() == 1) {
 				IASTNode node = nodes.get(0);
 				Map<String, String> holeMap = TTLUtils.getHoleMap(rule.lhs.nodeWithHoles, node.getRawSignature());
 				applyScopedRule(rule.scopeFragmentMap, holeMap);
 				IASTNode nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, rule.rhs);
-				astRewrite.replace(node, nodeToReplace, new TextEditGroup("Transformation language"));
+				returnNode.add(nodeToReplace);
 			}
 		} else {
 			IASTNode definition = getDefinition(nodes);
@@ -125,23 +220,32 @@ public class SearchAlgorithmNew {
 
 			IASTNode definitionToReplace = TTLUtils.constructUsingHoleMap(holeMap,
 					new TTlExpression(definitionRuleRHS, NodeType.DeclSpecifier));
-			System.out.println("Replacing ");
-			System.out.println(definition.getRawSignature());
-			System.out.println("With");
-			System.out.println(definitionToReplace.getRawSignature());
 
 			IASTNode declarationToReplace = TTLUtils.constructUsingHoleMap(holeMap,
 					new TTlExpression(declarationRuleRHS, NodeType.Declaration));
-			System.out.println("Replacing ");
-			System.out.println(declaration.getRawSignature());
-			System.out.println("With");
-			System.out.println(declarationToReplace.getRawSignature());
 
-			astRewrite.replace(definition, definitionToReplace, new TextEditGroup("Transformation language"));
-			astRewrite.replace(declaration, declarationToReplace, new TextEditGroup("Transformation language"));
+			returnNode.add(definitionToReplace);
+			returnNode.add(declarationToReplace);
 
 		}
-		return null;
+		return returnNode;
+	}
+
+	private static void printReplacingString(IASTNode toReplace, IASTNode replaceWith) {
+		System.out.println("Attempting to replace");
+		System.out.println(toReplace.getRawSignature());
+		System.out.println("With");
+		System.out.println(replaceWith.getRawSignature());
+	}
+
+	private static void printListNodes(List<IASTNode> nodes) {
+		for (IASTNode node : nodes) {
+			if (node != null) {
+				System.out.println("-----------");
+				System.out.println(node.getClass().getName());
+				System.out.println(node.getRawSignature());
+			}
+		}
 	}
 
 	private static void applyScopedRule(Map<Scope, String> scopeFragmentMap, Map<String, String> holeMap)
@@ -154,7 +258,6 @@ public class SearchAlgorithmNew {
 				ScopeVisitorNew scopeVisitor = new ScopeVisitorNew(scope);
 				codeFragment.accept(scopeVisitor);
 				Map<String, String> nodeReplacements = scopeVisitor.getNodeReplacements();
-				Map<String, String> referenceReplacements = scopeVisitor.getReferenceReplacements();
 				Map<String, String> returnedTagValues = scopeVisitor.returnedTagValues;
 
 				for (String tagKey : returnedTagValues.keySet()) {
@@ -172,28 +275,31 @@ public class SearchAlgorithmNew {
 	}
 
 	private static NodewRule FindRule(IASTNode sN) {
-		List<IASTNode> nodes = new ArrayList<IASTNode>(Arrays.asList(sN));
-		TTlRule rule = null;
-		for (TTlRule rl : rules) {
-			String pattern = rl.lhs.nodeWithHoles;
-			String codeToMatch = sN.getRawSignature();
-			if (TTLUtils.getHoleMap(pattern.replaceAll("\\s+", " "), codeToMatch.replaceAll("\\s+", " ")).size() > 0) {
-				rule = rl;
-			}
-		}
-		if (rule == null) {
-			// Check for possibility of DeclDefn Rule
-			nodes = getDeclDefnNode(sN);
-			if (nodes.size() > 0) {
-				try {
-					rule = ruleForDeclDefn(nodes);
-				} catch (Exception e) {
-					e.printStackTrace();
+		if (sN != null) {
+			List<IASTNode> nodes = new ArrayList<IASTNode>(Arrays.asList(sN));
+			TTlRule rule = null;
+			for (TTlRule rl : rules) {
+				String pattern = rl.lhs.nodeWithHoles;
+				String codeToMatch = sN.getRawSignature();
+				if (TTLUtils.getHoleMap(pattern.replaceAll("\\s+", " "), codeToMatch.replaceAll("\\s+", " "))
+						.size() > 0) {
+					rule = rl;
 				}
 			}
-		}
-		if (nodes.size() > 0 && rule != null) {
-			return new NodewRule(nodes, rule);
+			if (rule == null) {
+				// Check for possibility of DeclDefn Rule
+				nodes = getDeclDefnNode(sN);
+				if (nodes.size() > 0) {
+					try {
+						rule = ruleForDeclDefn(nodes);
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
+				}
+			}
+			if (nodes.size() > 0 && rule != null) {
+				return new NodewRule(nodes, rule);
+			}
 		}
 		return null;
 	}

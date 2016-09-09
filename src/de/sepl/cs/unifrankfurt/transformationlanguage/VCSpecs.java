@@ -26,6 +26,13 @@ public class VCSpecs {
 				"struct __ttlstructname___v { __ttlstructbody__; } __ttlaobj___v[__ttllimit__/__tagttlvctype__::size];",
 				NodeType.DeclDefn);
 
+		TTlExpression rulePatternGuidance = new TTlExpression("__ttlarr__[__ttlindex__]", NodeType.Expression);
+		TTlExpression ruleConstructExpressionGuidance = new TTlExpression("__ttlarr__[__ttlindex__]",
+				NodeType.Expression);
+
+		rules.add(new TTlRule(rulePatternGuidance, ruleConstructExpressionGuidance, NodeType.Expression,
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+
 		rules.add(new TTlRule(ttlPattern1, ttlConstructExpression1, NodeType.DeclDefn, getScopeFragMentMapStruct(),
 				getTagValueMapStruct()));
 
@@ -77,19 +84,18 @@ public class VCSpecs {
 				arrayindextagUpdate);
 		forScopeRules.add(arrayindexrule);
 
-		
 		Map<String, String> sqrttagUpdate = new HashMap<String, String>();
 		String lhssqrt = "std::sqrt(__ttlsqrtexpr1__ + __ttlsqrtexpr2__)";
 		String rhssqrt = "vc::sqrt(__ttlsqrtexpr1__ + __ttlsqrtexpr2__)";
 		ScopeRule sqrtRule = new ScopeRule(lhssqrt, rhssqrt, NodeType.Expression, sqrttagUpdate);
 		forScopeRules.add(sqrtRule);
-		
+
 		Map<String, String> tantagUpdate = new HashMap<String, String>();
 		String lhstan = "std::atan2(__ttlsqrtexpr1__, __ttlsqrtexpr2__)";
 		String rhstan = "vc::atan2(__ttlsqrtexpr1__,__ttlsqrtexpr2__)";
 		ScopeRule tanRule = new ScopeRule(lhstan, rhstan, NodeType.Expression, tantagUpdate);
 		forScopeRules.add(tanRule);
-		
+
 		Map<String, String> forTagValueMap = new HashMap<String, String>();
 		Scope forScope = new Scope(forScopeRules, forTagValueMap);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();

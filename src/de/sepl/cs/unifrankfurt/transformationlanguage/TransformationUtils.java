@@ -38,16 +38,10 @@ public class TransformationUtils {
 		IBinding binding = objectRef.getBinding();
 		if (binding instanceof CPPVariable || binding instanceof CVariable || binding instanceof CParameter) {
 			for (IASTName name : ast.getReferences(binding)) {
-				uses.add(name.getParent().getParent());
+				uses.add(name);
 			}
 			for (IASTName name : ast.getDeclarationsInAST(binding)) {
-				List<IASTNode> nodes = new ArrayList<IASTNode>();
-				nodes.add(name.getParent().getParent());
-				if (!SearchAlgorithm.isNodeHandled(nodes)) {
-					if (binding instanceof CParameter) {
-						uses.add(name.getParent().getParent());
-					}
-				}
+				uses.add(name);
 			}
 		}
 		return uses;

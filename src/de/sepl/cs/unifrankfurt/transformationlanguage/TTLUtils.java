@@ -275,7 +275,6 @@ public class TTLUtils {
 		try {
 			holeMap = matcher.parse(code);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 		}
 		return holeMap;
 	}
@@ -286,7 +285,6 @@ public class TTLUtils {
 		try {
 			holeMap = matcher.parse(code);
 		} catch (Exception e) {
-			System.out.println(e.getMessage());
 		}
 		for (String key : holeMap.keySet()) {
 			holeMap.put(key, removeLastSemiColon(holeMap.get(key)));

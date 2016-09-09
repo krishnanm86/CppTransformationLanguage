@@ -31,9 +31,6 @@ public class NameVisitor extends ASTVisitor {
 	public int visit(IASTName name) {
 		if ((name.getParent().getParent() instanceof IASTArraySubscriptExpression)) {
 			IASTArraySubscriptExpression expr = (IASTArraySubscriptExpression) name.getParent().getParent();
-			System.out.println("Array encountered");
-			System.out.println(expr.getChildren()[0].getRawSignature() + "q3iouoqui");
-			System.out.println(expr.getChildren()[1].getRawSignature() + "q3iouoqui");
 			if (expr.getChildren()[1].equals(name.getParent())) {
 				return super.visit(name);
 			}

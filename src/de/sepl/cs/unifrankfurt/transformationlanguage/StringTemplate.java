@@ -51,7 +51,6 @@ public class StringTemplate {
 	public Map<String, String> parse(String string) {
 		Matcher matcher = pattern.matcher(string.replaceAll("\\s+", " "));
 		if (!matcher.matches()) {
-			System.out.println("String '" + string + "' does not match template '" + template + "'.");
 			throw new IllegalArgumentException("String '" + string + "' does not match template '" + template + "'.");
 		}
 		Map<String, String> results = new HashMap<>();
