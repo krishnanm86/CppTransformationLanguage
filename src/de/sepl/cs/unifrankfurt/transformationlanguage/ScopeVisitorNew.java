@@ -90,7 +90,8 @@ public class ScopeVisitorNew extends ASTVisitor {
 
 	@Override
 	public int visit(IASTExpression expression) {
-		System.out.println("visiting" + expression.getRawSignature());
+		applyRule(expression, NodeType.Expression);
+		/*System.out.println("visiting" + expression.getRawSignature());
 		if (expression instanceof CPPASTFieldReference) {
 			try {
 				if (!SearchAlgorithm.migrations.getMigratedName(expression.getRawSignature())
@@ -113,7 +114,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
-		}
+		}*/
 		return super.visit(expression);
 	}
 

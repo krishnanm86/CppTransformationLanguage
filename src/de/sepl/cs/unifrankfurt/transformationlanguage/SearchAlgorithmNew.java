@@ -12,6 +12,7 @@ import java.util.Set;
 
 import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
+import org.eclipse.cdt.core.dom.ast.IASTForStatement;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
@@ -87,16 +88,8 @@ public class SearchAlgorithmNew {
 			N.add(SN);
 			List<IASTNode> D = getDependencies(N);
 
-			// TODO: Remove
-			System.out.println("The dependencies of ");
-			printListNodes(N);
-			System.out.println("are");
-
 			for (IASTNode d : D) {
 				if (d != null && !WORKLIST.contains(d) && !DONE.contains(d)) {
-					System.out.println("-------------------");
-					System.out.println(d.getClass().getName());
-					System.out.println(d.getRawSignature());
 					WORKLIST.add(d);
 				}
 			}
@@ -276,6 +269,10 @@ public class SearchAlgorithmNew {
 	}
 
 	private static NodewRule FindRule(IASTNode sN) {
+		if(sN instanceof IASTForStatement)
+		{
+			System.out.println("xxx");
+		}
 		if (sN != null) {
 			List<IASTNode> nodes = new ArrayList<IASTNode>(Arrays.asList(sN));
 			TTlRule rule = null;
@@ -367,8 +364,8 @@ public class SearchAlgorithmNew {
 	}
 
 	private static void setRules() throws Exception {
-		rules = VCSpecs.populateRules();
-		// rules = GMPSpecs.populateRules();
+		//rules = VCSpecs.populateRules();
+		 rules = GMPSpecs.populateRules();
 		// rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}

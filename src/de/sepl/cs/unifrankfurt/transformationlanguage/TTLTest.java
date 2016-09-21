@@ -30,7 +30,7 @@ public class TTLTest {
 				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/float_v::size; __ttli__++ ) { __ttlforbody__;  }",
 				NodeType.Statement);
 		TTlExpression ttlFragmentToMatchFor = new TTlExpression(
-				"for(int i = 0 ; i < 1000 ; i++ ) { float temp1 = input[i].x; float temp2 = input[i].y; output[i].r = std::sqrt((x * x) + (y * y)); output[i].phi = std::atan2(y, x) * 57.295780181884765625f; // 180/pi if (output[i].phi < 0.f) { output[i].phi += 360.f; }; }",
+				"for(int i = 0 ; i < 1000 ; i++ ) { float temp1 = input[i].x; float temp2 = input[i].y; output[i].r = std::sqrt((x * x) + (y * y)); output[i].phi = std::atan2(y, x) * 57.295780181884765625f; }",
 				NodeType.Statement);
 		
 		TTlExpression ttlFragmentToMatchFor1 = new TTlExpression(
