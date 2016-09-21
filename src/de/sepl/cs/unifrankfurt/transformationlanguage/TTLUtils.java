@@ -659,4 +659,12 @@ public class TTLUtils {
 		return getNodeFromString(returnNode, expr.type);
 	}
 
+	public static String constructStringUsingHoleMap(Map<String, String> holeMap, TTlExpression expr) {
+		String returnNode = new String(expr.nodeWithHoles);
+		for (String hole : holeMap.keySet()) {
+			returnNode = returnNode.replace(hole, holeMap.get(hole));
+		}
+		return returnNode;
+	}
+
 }

@@ -36,9 +36,14 @@ public class TTLTest {
 		TTlExpression ttlFragmentToMatchFor1 = new TTlExpression(
 				"for(int i = 0 ; i < 1000 ; i++ ) { FN1(); }",
 				NodeType.Statement);
-		StringTemplate matcher = new StringTemplate(ttlForPattern.nodeWithHoles);
-		Map<String, String> holeMap = matcher.parse(ttlFragmentToMatchFor.nodeWithHoles);
+		TTlExpression rulePattern1 = new TTlExpression("__ttlp__ = __ttlp2__ + __ttlp3__;", NodeType.Statement);
+		TTlExpression ruleConstructExpression1 = new TTlExpression("mpz_add(__ttlp__,__ttlp2__,__ttlp3__);",
+				NodeType.Statement);
+		
+		TTlExpression addExpr = new TTlExpression("D = D + 1;", NodeType.Statement);
+		StringTemplate matcher = new StringTemplate(rulePattern1.nodeWithHoles);
+		Map<String, String> holeMap = matcher.parse(addExpr.nodeWithHoles);
 		System.out.println(holeMap);
-		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ttlForConstructExpression).getRawSignature());
+		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ruleConstructExpression1).getRawSignature());
 	}
 }

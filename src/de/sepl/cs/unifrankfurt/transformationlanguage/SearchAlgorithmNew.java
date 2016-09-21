@@ -12,13 +12,11 @@ import java.util.Set;
 
 import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
-import org.eclipse.cdt.core.dom.ast.IASTForStatement;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTForStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
 import org.eclipse.text.edits.TextEditGroup;
@@ -143,7 +141,7 @@ public class SearchAlgorithmNew {
 
 	private static void recordInAST(NodewRule Nr, List<IASTNode> Ndash) {
 		if (Nr.nodes.size() == 1 && Ndash.size() == 1) {
-			printReplacingString(Nr.nodes.get(0), Ndash.get(0));
+			//printReplacingString(Nr.nodes.get(0), Ndash.get(0));
 			astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
 		} else if (Nr.rule.type == NodeType.DeclDefn && Nr.nodes.size() == 2 && Ndash.size() == 2) {
 			IASTNode definitionNr = getDefinition(Nr.nodes);
@@ -151,8 +149,8 @@ public class SearchAlgorithmNew {
 			IASTNode declarationNr = getDeclaration(Nr.nodes);
 			IASTNode declarationNdash = getDeclaration(Ndash);
 
-			printReplacingString(declarationNr, declarationNdash);
-			printReplacingString(definitionNr, declarationNdash);
+			//printReplacingString(declarationNr, declarationNdash);
+			//printReplacingString(definitionNr, declarationNdash);
 
 			astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
 			astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
@@ -167,7 +165,13 @@ public class SearchAlgorithmNew {
 				IASTNode node = nodes.get(0);
 				Map<String, String> holeMap = TTLUtils.getHoleMap(rule.lhs.nodeWithHoles, node.getRawSignature());
 				applyScopedRule(rule.scopeFragmentMap, holeMap);
-				IASTNode nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, rule.rhs);
+				IASTNode nodeToReplace = node;
+				try {
+					nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, rule.rhs);
+				} catch (Exception e) {
+					System.out.println("Failed to replace " + node.getRawSignature() + " with "
+							+ TTLUtils.constructStringUsingHoleMap(holeMap, rule.rhs));
+				}
 				returnNode.add(nodeToReplace);
 			}
 		} else {
@@ -232,15 +236,6 @@ public class SearchAlgorithmNew {
 		System.out.println(replaceWith.getRawSignature());
 	}
 
-	private static void printListNodes(List<IASTNode> nodes) {
-		for (IASTNode node : nodes) {
-			if (node != null) {
-				System.out.println("-----------");
-				System.out.println(node.getClass().getName());
-				System.out.println(node.getRawSignature());
-			}
-		}
-	}
 
 	private static void applyScopedRule(Map<Scope, String> scopeFragmentMap, Map<String, String> holeMap)
 			throws Exception {
@@ -269,10 +264,6 @@ public class SearchAlgorithmNew {
 	}
 
 	private static NodewRule FindRule(IASTNode sN) {
-		if(sN instanceof IASTForStatement)
-		{
-			System.out.println("xxx");
-		}
 		if (sN != null) {
 			List<IASTNode> nodes = new ArrayList<IASTNode>(Arrays.asList(sN));
 			TTlRule rule = null;
@@ -364,8 +355,8 @@ public class SearchAlgorithmNew {
 	}
 
 	private static void setRules() throws Exception {
-		//rules = VCSpecs.populateRules();
-		 rules = GMPSpecs.populateRules();
+		// rules = VCSpecs.populateRules();
+		rules = GMPSpecs2.populateRules();
 		// rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}

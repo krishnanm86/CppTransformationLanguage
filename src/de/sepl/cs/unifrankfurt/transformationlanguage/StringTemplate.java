@@ -29,7 +29,7 @@ import java.util.regex.Pattern;
  */
 public class StringTemplate {
 	private static final Pattern PARAMETER_PATTERN = Pattern.compile("\\_\\_ttl([^/?\\_\\_]+)\\_\\_");
-
+	public static boolean StatementAccomodate = false;
 	private final Pattern pattern;
 	private final List<String> parameters;
 	private final String template;
@@ -57,7 +57,7 @@ public class StringTemplate {
 		for (String parameter : parameters) {
 			String parameterName = "__ttl" + parameter + "__";
 			String parameterValue = matcher.group(parameter);
-			if (template.charAt(template.indexOf(parameterName) + parameterName.length()) == ';') {
+			if (StatementAccomodate  && template.charAt(template.indexOf(parameterName) + parameterName.length()) == ';') {
 				parameterValue = parameterValue + ";";
 			}
 			results.put(parameterName, parameterValue);
