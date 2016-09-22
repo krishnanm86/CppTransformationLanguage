@@ -40,10 +40,14 @@ public class TTLTest {
 		TTlExpression ruleConstructExpression1 = new TTlExpression("mpz_add(__ttlp__,__ttlp2__,__ttlp3__);",
 				NodeType.Statement);
 		
-		TTlExpression addExpr = new TTlExpression("D = D + 1;", NodeType.Statement);
-		StringTemplate matcher = new StringTemplate(rulePattern1.nodeWithHoles);
+		TTlExpression rulePattern2 = new TTlExpression("__ttlp__ = __ttlp2__;", NodeType.Statement);
+		TTlExpression ruleConstructExpression2 = new TTlExpression("mpz_set(__ttlp__,__ttlp2__);", NodeType.Statement);
+		
+		
+		TTlExpression addExpr = new TTlExpression("arr[j+1] = arr[j];", NodeType.Statement);
+		StringTemplate matcher = new StringTemplate(rulePattern2.nodeWithHoles);
 		Map<String, String> holeMap = matcher.parse(addExpr.nodeWithHoles);
 		System.out.println(holeMap);
-		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ruleConstructExpression1).getRawSignature());
+		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ruleConstructExpression2).getRawSignature());
 	}
 }

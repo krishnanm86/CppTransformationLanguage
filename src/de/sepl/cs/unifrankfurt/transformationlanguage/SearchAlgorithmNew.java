@@ -121,13 +121,13 @@ public class SearchAlgorithmNew {
 	}
 
 	private static void addParent(IASTNode node, List<IASTNode> dependencies) {
-		if (!(node.getParent() instanceof IASTTranslationUnit))
+		if (!(node.getParent() instanceof IASTTranslationUnit)) {
 			dependencies.add(node.getParent());
-		{
-			if (node.getParent() != null) {
+			/*if (node.getParent() != null) {
 				dependencies.add(node.getParent().getParent());
-			}
+			}*/
 		}
+
 	}
 
 	private static void addToSet(Set<IASTNode> done, List<IASTNode> nodes, List<IASTNode> ndash) {
@@ -141,16 +141,18 @@ public class SearchAlgorithmNew {
 
 	private static void recordInAST(NodewRule Nr, List<IASTNode> Ndash) {
 		if (Nr.nodes.size() == 1 && Ndash.size() == 1) {
-			//printReplacingString(Nr.nodes.get(0), Ndash.get(0));
-			astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
+			if (Ndash.get(0) != null) {
+				printReplacingString(Nr.nodes.get(0), Ndash.get(0));
+				astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
+			}
 		} else if (Nr.rule.type == NodeType.DeclDefn && Nr.nodes.size() == 2 && Ndash.size() == 2) {
 			IASTNode definitionNr = getDefinition(Nr.nodes);
 			IASTNode definitionNdash = getDefinition(Ndash);
 			IASTNode declarationNr = getDeclaration(Nr.nodes);
 			IASTNode declarationNdash = getDeclaration(Ndash);
 
-			//printReplacingString(declarationNr, declarationNdash);
-			//printReplacingString(definitionNr, declarationNdash);
+			// printReplacingString(declarationNr, declarationNdash);
+			// printReplacingString(definitionNr, declarationNdash);
 
 			astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
 			astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
@@ -165,7 +167,7 @@ public class SearchAlgorithmNew {
 				IASTNode node = nodes.get(0);
 				Map<String, String> holeMap = TTLUtils.getHoleMap(rule.lhs.nodeWithHoles, node.getRawSignature());
 				applyScopedRule(rule.scopeFragmentMap, holeMap);
-				IASTNode nodeToReplace = node;
+				IASTNode nodeToReplace = null;
 				try {
 					nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, rule.rhs);
 				} catch (Exception e) {
@@ -236,7 +238,6 @@ public class SearchAlgorithmNew {
 		System.out.println(replaceWith.getRawSignature());
 	}
 
-
 	private static void applyScopedRule(Map<Scope, String> scopeFragmentMap, Map<String, String> holeMap)
 			throws Exception {
 		for (Scope scope : scopeFragmentMap.keySet()) {
@@ -267,12 +268,19 @@ public class SearchAlgorithmNew {
 		if (sN != null) {
 			List<IASTNode> nodes = new ArrayList<IASTNode>(Arrays.asList(sN));
 			TTlRule rule = null;
+			boolean ruleFound = false;
 			for (TTlRule rl : rules) {
 				String pattern = rl.lhs.nodeWithHoles;
 				String codeToMatch = sN.getRawSignature();
-				if (TTLUtils.getHoleMap(pattern.replaceAll("\\s+", " "), codeToMatch.replaceAll("\\s+", " "))
-						.size() > 0) {
-					rule = rl;
+				Map<String, String> holeMap = TTLUtils.getHoleMap(pattern.replaceAll("\\s+", " "),
+						codeToMatch.replaceAll("\\s+", " "));
+				if (holeMap.size() > 0) {
+					if (!ruleFound) {
+						rule = rl;
+						ruleFound = true;
+					} else {
+						printAlternateOption(holeMap, rl, sN);
+					}
 				}
 			}
 			if (rule == null) {
@@ -291,6 +299,15 @@ public class SearchAlgorithmNew {
 			}
 		}
 		return null;
+	}
+
+	private static void printAlternateOption(Map<String, String> holeMap, TTlRule rl, IASTNode sN) {
+		System.out.println("Alternate option available");
+		System.out.println(sN.getRawSignature());
+		System.out.println("at");
+		System.out.println(sN.getFileLocation().getStartingLineNumber());
+		System.out.println(" With ");
+		System.out.println(TTLUtils.constructStringUsingHoleMap(holeMap, rl.rhs));
 	}
 
 	private static List<IASTNode> getDeclDefnNode(IASTNode sN) {
@@ -356,7 +373,7 @@ public class SearchAlgorithmNew {
 
 	private static void setRules() throws Exception {
 		// rules = VCSpecs.populateRules();
-		rules = GMPSpecs2.populateRules();
+		rules = GMPSpecsNew.populateRules2();
 		// rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}

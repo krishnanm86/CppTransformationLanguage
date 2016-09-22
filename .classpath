@@ -106,6 +106,7 @@
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="antlr"/>
 	<classpathentry kind="src" path="target/generated-sources/antlr4"/>
+	<classpathentry kind="src" path="cppexamples"/>
 	<classpathentry kind="lib" path="antlr-4.4-complete.jar"/>
 	<classpathentry kind="lib" path="commons-lang3-3.4.jar"/>
 	<classpathentry kind="output" path="bin"/>
