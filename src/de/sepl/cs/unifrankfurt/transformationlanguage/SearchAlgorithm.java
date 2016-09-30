@@ -25,6 +25,7 @@ import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.IASTAmbiguityParent;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompoundStatement;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTElaboratedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTIdExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTReturnStatement;
@@ -35,6 +36,7 @@ import org.eclipse.cdt.internal.core.pdom.export.GeneratePDOMApplication;
 import org.eclipse.text.edits.TextEditGroup;
 
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
+import de.sepl.cs.unifrankfurt.ttlparserlexer.TTLParser.ElaboratedtypespecifierContext;
 
 @SuppressWarnings("restriction")
 public class SearchAlgorithm {
@@ -62,9 +64,9 @@ public class SearchAlgorithm {
 	}
 
 	private static void setRules() throws Exception {
-		rules = VCSpecs.populateRules();
+		// rules = VCSpecs.populateRules();
 		// rules = GMPSpecs.populateRules();
-		// rules = AOSSOASpecs.populateRules();
+		rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}
 
@@ -148,10 +150,17 @@ public class SearchAlgorithm {
 				}
 			}
 			enclosingNode = selectedNodeAsList.get(0);
-			;
-			if (enclosingNode instanceof CPPASTSimpleDeclaration && ((CPPASTSimpleDeclaration) enclosingNode)
-					.getDeclSpecifier() instanceof CPPASTNamedTypeSpecifier) {
+			IASTDeclSpecifier spec = ((CPPASTSimpleDeclaration) enclosingNode).getDeclSpecifier();
+			System.out.println(spec.getRawSignature());
+			if (enclosingNode instanceof CPPASTSimpleDeclaration && (spec instanceof CPPASTNamedTypeSpecifier)) {
 				IASTName name = ((CPPASTNamedTypeSpecifier) ((CPPASTSimpleDeclaration) enclosingNode)
+						.getDeclSpecifier()).getName();
+				returnNode.add(TransformationUtils.getDefns(name));
+				returnNode.add(enclosingNode);
+			}
+
+			if (enclosingNode instanceof CPPASTSimpleDeclaration && (spec instanceof CPPASTElaboratedTypeSpecifier)) {
+				IASTName name = ((CPPASTElaboratedTypeSpecifier) ((CPPASTSimpleDeclaration) enclosingNode)
 						.getDeclSpecifier()).getName();
 				returnNode.add(TransformationUtils.getDefns(name));
 				returnNode.add(enclosingNode);
@@ -171,20 +180,19 @@ public class SearchAlgorithm {
 		List<IASTNode> dependencies;
 		List<IASTName> untouchableNames = new ArrayList<IASTName>();
 		List<IASTExpression> acceptableExpression = new ArrayList<IASTExpression>();
-		/*if (rule != null && rule.pileList != null) {
-			acceptableExpression = getExpressionsAsNodes(rule.pileList.acceptableExpressions);
-			List<IASTExpression> unacceptableExpression = getExpressionsAsNodes(rule.pileList.unacceptableExpressions);
-			for (IASTExpression expr : unacceptableExpression) {
-				NameVisitor n = new NameVisitor();
-				expr.accept(n);
-				untouchableNames.addAll(n.getNames());
-			}
-		}
-		if (untouchableNames != null && untouchableNames.size() > 0) {
-			dependencies = getDependenciesWithUntouchableNames(selectedNodeAsList, true, untouchableNames);
-		} else {
-			dependencies = getDependencies(selectedNodeAsList, true);
-		}*/
+		/*
+		 * if (rule != null && rule.pileList != null) { acceptableExpression =
+		 * getExpressionsAsNodes(rule.pileList.acceptableExpressions);
+		 * List<IASTExpression> unacceptableExpression =
+		 * getExpressionsAsNodes(rule.pileList.unacceptableExpressions); for
+		 * (IASTExpression expr : unacceptableExpression) { NameVisitor n = new
+		 * NameVisitor(); expr.accept(n); untouchableNames.addAll(n.getNames());
+		 * } } if (untouchableNames != null && untouchableNames.size() > 0) {
+		 * dependencies =
+		 * getDependenciesWithUntouchableNames(selectedNodeAsList, true,
+		 * untouchableNames); } else { dependencies =
+		 * getDependencies(selectedNodeAsList, true); }
+		 */
 		dependencies = getDependencies(selectedNodeAsList, true);
 		workQueue.addAll(acceptableExpression);
 		workQueue.addAll(dependencies);
@@ -323,6 +331,8 @@ public class SearchAlgorithm {
 			// Apply tags and scope rules
 			if (rule.scopeFragmentMap != null && rule.tagValueMap != null) {
 				for (Scope scope : rule.scopeFragmentMap.keySet()) {
+					updateScopeWithParams(scope, declarationMatch);
+					updateScopeWithParams(scope, definitionMatch);
 					ScopeVisitor s = new ScopeVisitor(scope, astRewrite);
 					if (definitionMatch.get(rule.scopeFragmentMap.get(scope)) != null) {
 						List<IASTNode> scopeMatches = definitionMatch.get(rule.scopeFragmentMap.get(scope));
@@ -510,6 +520,19 @@ public class SearchAlgorithm {
 	 * migrations.varMigrations.put(Pair.of(oldName, newName), typeMigration); }
 	 * } return true; }
 	 */
+
+	private static void updateScopeWithParams(Scope scope, Map<String, List<IASTNode>> declarationMatch) {
+		for (String str : declarationMatch.keySet()) {
+			for (String strpa : scope.parametersMap.keySet()) {
+				if (str.equalsIgnoreCase(strpa)) {
+					System.out.println("Parameter match found");
+					String paramVal = declarationMatch.get(str).get(0).getRawSignature();
+					System.out.println(strpa + "  = " + paramVal);
+					scope.parametersMap.put(strpa, declarationMatch.get(str));
+				}
+			}
+		}
+	}
 
 	private static String getStringFromNodes(List<IASTNode> nodesAsList) throws Exception {
 		String returnNodes = "";

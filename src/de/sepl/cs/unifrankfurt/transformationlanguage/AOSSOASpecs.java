@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.eclipse.cdt.core.dom.ast.IASTNode;
+
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
 public class AOSSOASpecs {
@@ -14,10 +16,10 @@ public class AOSSOASpecs {
 	public static Set<TTlRule> populateRules() throws Exception {
 		Set<TTlRule> rules = new HashSet<TTlRule>();
 
-		TTlExpression ttlPattern1 = new TTlExpression("struct __ttlstructname__ { __ttlstructbody__; } __ttlaobj__;",
-				NodeType.DeclDefn);
+		TTlExpression ttlPattern1 = new TTlExpression(
+				"struct __ttlstructname__ { __ttlstructbody__; } __ttlaobj__[__ttlarraysize__];", NodeType.DeclDefn);
 		TTlExpression ttlConstructExpression1 = new TTlExpression(
-				"struct __ttlstructname___v { __ttlstructbody__; } __ttlaobj__[__tagttlsize__];", NodeType.DeclDefn);
+				"struct __ttlstructname___v { __ttlstructbody__; } __ttlaobj__;", NodeType.DeclDefn);
 
 		TTlExpression ttlPattern2 = new TTlExpression("__ttlname__.__ttlfield__[__ttli__]", NodeType.Expression);
 		TTlExpression ttlConstructExpression2 = new TTlExpression("__ttlname__[__ttli__].__ttlfield__",
@@ -38,19 +40,23 @@ public class AOSSOASpecs {
 
 	private static Map<Scope, String> getScopeFragMentMapStruct() {
 
-		String lhs = "__ttltype__ __ttla__[__ttlarraylimit__];";
+		String lhs = "__ttltype__ __ttla__;";
 		NodeType ruleType = NodeType.Declaration;
 		Map<String, String> arraysubscripttagUpdates = new HashMap<String, String>();
-		arraysubscripttagUpdates.put("__tagttlsize__", "__ttlarraylimit__");
 		List<ScopeRule> structScopeRules = new ArrayList<ScopeRule>();
-		String rhs = "__ttltype__ __ttla__;";
+		String rhs = "__ttltype__ __ttla__[__ttlarraysize__];";
 		ScopeRule arraysubscriptRule = new ScopeRule(lhs, rhs, ruleType, arraysubscripttagUpdates);
 		structScopeRules.add(arraysubscriptRule);
 
 		Map<String, String> structTagValueMap = new HashMap<String, String>();
 		Scope structScope = new Scope(structScopeRules, structTagValueMap);
+
+		Map<String, List<IASTNode>> params = new HashMap<String, List<IASTNode>>();
+		params.put("__ttlarraysize__", new ArrayList<IASTNode>());
+		structScope.setParametersMap(params);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();
 		scopeFragMentMap.put(structScope, "__ttlstructbody__");
+
 		return scopeFragMentMap;
 	}
 

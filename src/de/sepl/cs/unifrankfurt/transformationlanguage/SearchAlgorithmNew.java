@@ -123,11 +123,7 @@ public class SearchAlgorithmNew {
 	private static void addParent(IASTNode node, List<IASTNode> dependencies) {
 		if (!(node.getParent() instanceof IASTTranslationUnit)) {
 			dependencies.add(node.getParent());
-			/*if (node.getParent() != null) {
-				dependencies.add(node.getParent().getParent());
-			}*/
 		}
-
 	}
 
 	private static void addToSet(Set<IASTNode> done, List<IASTNode> nodes, List<IASTNode> ndash) {
@@ -150,9 +146,6 @@ public class SearchAlgorithmNew {
 			IASTNode definitionNdash = getDefinition(Ndash);
 			IASTNode declarationNr = getDeclaration(Nr.nodes);
 			IASTNode declarationNdash = getDeclaration(Ndash);
-
-			// printReplacingString(declarationNr, declarationNdash);
-			// printReplacingString(definitionNr, declarationNdash);
 
 			astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
 			astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
@@ -373,8 +366,8 @@ public class SearchAlgorithmNew {
 
 	private static void setRules() throws Exception {
 		// rules = VCSpecs.populateRules();
-		rules = GMPSpecsNew.populateRules2();
-		// rules = AOSSOASpecs.populateRules();
+		// rules = GMPSpecsNew.populateRules2();
+		rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}
 }
