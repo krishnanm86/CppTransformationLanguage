@@ -72,11 +72,12 @@ public class SearchAlgorithmNew {
 	private static void WorkBlock(IASTNode SN) throws Exception {
 		NodewRule Nr = FindRule(SN);
 		List<IASTNode> Ndash = null;
-		if (Nr != null) {
-			Ndash = SUBST(Nr.nodes, Nr.rule);
-			addToSet(DONE, Nr.nodes, Ndash);
+		if (Nr == null)
+			return;
 
-		}
+		Ndash = SUBST(Nr.nodes, Nr.rule);
+		addToSet(DONE, Nr.nodes, Ndash);
+
 		if (!isLastRuleFail) // N' not equals Fail scenario
 		{
 			if (Nr != null && Ndash != null) {
@@ -123,6 +124,12 @@ public class SearchAlgorithmNew {
 	private static void addParent(IASTNode node, List<IASTNode> dependencies) {
 		if (!(node.getParent() instanceof IASTTranslationUnit)) {
 			dependencies.add(node.getParent());
+			if (!(node.getParent().getParent() instanceof IASTTranslationUnit)) {
+				dependencies.add(node.getParent().getParent());
+				if (!(node.getParent().getParent().getParent() instanceof IASTTranslationUnit)) {
+					dependencies.add(node.getParent().getParent().getParent());
+				}
+			}
 		}
 	}
 
@@ -265,6 +272,10 @@ public class SearchAlgorithmNew {
 			for (TTlRule rl : rules) {
 				String pattern = rl.lhs.nodeWithHoles;
 				String codeToMatch = sN.getRawSignature();
+				if (pattern.equals(codeToMatch)) {
+					rule = rl;
+					ruleFound = true;
+				}
 				Map<String, String> holeMap = TTLUtils.getHoleMap(pattern.replaceAll("\\s+", " "),
 						codeToMatch.replaceAll("\\s+", " "));
 				if (holeMap.size() > 0) {
@@ -366,8 +377,8 @@ public class SearchAlgorithmNew {
 
 	private static void setRules() throws Exception {
 		// rules = VCSpecs.populateRules();
-		// rules = GMPSpecsNew.populateRules2();
-		rules = AOSSOASpecs.populateRules();
+		rules = GMPSpecsNew.populateRules3();
+		// rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}
 }

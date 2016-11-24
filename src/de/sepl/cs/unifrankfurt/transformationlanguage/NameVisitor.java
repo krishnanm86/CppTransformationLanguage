@@ -6,9 +6,11 @@ import java.util.List;
 import org.eclipse.cdt.core.dom.ast.ASTVisitor;
 import org.eclipse.cdt.core.dom.ast.IASTArraySubscriptExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
+import org.eclipse.cdt.core.dom.ast.IASTParameterDeclaration;
 import org.eclipse.cdt.internal.core.dom.parser.c.CParameter;
 import org.eclipse.cdt.internal.core.dom.parser.c.CVariable;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPClassType;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPParameter;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPVariable;
 
 @SuppressWarnings("restriction")
@@ -23,6 +25,7 @@ public class NameVisitor extends ASTVisitor {
 		objectrefs = new ArrayList<IASTName>();
 		typerefs = new ArrayList<IASTName>();
 		shouldVisitNames = true;
+		shouldVisitParameterDeclarations = true;
 		visitedNames = new ArrayList<IASTName>();
 		names = new ArrayList<IASTName>();
 	}
@@ -49,6 +52,33 @@ public class NameVisitor extends ASTVisitor {
 			objectrefs.add(name);
 		}
 		return super.visit(name);
+	}
+	
+	@Override
+	public int visit(IASTParameterDeclaration paramDecl) {
+		if ((paramDecl.getParent().getParent() instanceof IASTArraySubscriptExpression)) {
+			IASTArraySubscriptExpression expr = (IASTArraySubscriptExpression) paramDecl.getParent().getParent();
+			if (expr.getChildren()[1].equals(paramDecl.getParent())) {
+				return super.visit(paramDecl);
+			}
+		}
+		names.add(paramDecl.getDeclarator().getName());
+		if (paramDecl.getDeclarator().getName().getBinding() instanceof CPPClassType) {
+			typerefs.add(paramDecl.getDeclarator().getName());
+		}
+		if (paramDecl.getDeclarator().getName().getBinding() instanceof CPPVariable) {
+			objectrefs.add(paramDecl.getDeclarator().getName());
+		}
+		if (paramDecl.getDeclarator().getName().getBinding() instanceof CParameter) {
+			objectrefs.add(paramDecl.getDeclarator().getName());
+		}
+		if (paramDecl.getDeclarator().getName().getBinding() instanceof CPPParameter) {
+			objectrefs.add(paramDecl.getDeclarator().getName());
+		}
+		if (paramDecl.getDeclarator().getName().getBinding() instanceof CVariable) {
+			objectrefs.add(paramDecl.getDeclarator().getName());
+		}
+		return super.visit(paramDecl.getDeclarator().getName());
 	}
 
 	public List<IASTName> getNames() {
