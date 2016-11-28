@@ -29,6 +29,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 	Map<String, String> nodeReplacements;
 	Map<String, String> referenceReplacements;
 	Map<String, String> returnedTagValues;
+	private TTlRule rule;
 
 	public Scope getScope() {
 		return scope;
@@ -54,7 +55,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 		this.referenceReplacements = referenceReplacements;
 	}
 
-	public ScopeVisitorNew(Scope scope) {
+	public ScopeVisitorNew(Scope scope, TTlRule rule) {
 		this.scope = scope;
 		nodeReplacements = new HashMap<String, String>();
 		referenceReplacements = new HashMap<String, String>();
@@ -63,6 +64,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 		shouldVisitStatements = true;
 		shouldVisitExpressions = true;
 		shouldVisitNames = true;
+		this.rule = rule;
 	}
 
 	@Override
@@ -78,7 +80,6 @@ public class ScopeVisitorNew extends ASTVisitor {
 			for (Pair<String, String> varMigration : SearchAlgorithm.migrations.varMigrations.keySet()) {
 				if (name.toString().equals(varMigration.getLeft())) {
 					referenceReplacements.put(name.toString(), varMigration.getRight());
-					System.out.println("Migrating " + name.toString() + " to " + varMigration.getRight());
 				}
 			}
 		} catch (Exception e) {
@@ -217,6 +218,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 			if (returnedTagValues.containsKey(tagKey)) {
 				if (!returnedTagValues.get(tagKey).equals(tagUpdate.tagvalue)) {
 					returnedTagValues.put(tagKey, ScopeRule.tagEmpty);
+					rule.isRuleApplicationFail = true;
 				}
 			} else {
 				if (tagUpdate.tagvalue.startsWith(TTLUtils.ttlHolePrefix)) {
@@ -237,6 +239,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 				if (returnedTagValues.containsKey(tag)) {
 					if (!returnedTagValues.get(tag).equals(tagUpdates.get(tag))) {
 						returnedTagValues.put(tag, ScopeRule.tagEmpty);
+						rule.isRuleApplicationFail = true;
 					}
 				} else {
 					returnedTagValues.put(tag, tagUpdates.get(tag));

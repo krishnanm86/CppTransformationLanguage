@@ -11,12 +11,14 @@ public class TTlRule {
 	Map<Scope, String> scopeFragmentMap;
 	Map<Tag, String> tagValueMap;
 	PileList pileList;
+	boolean isRuleApplicationFail = false;
 
 	public TTlRule(TTlExpression lhs, TTlExpression rhs, NodeType type) throws Exception {
 		if ((lhs.type == type) && (lhs.type == rhs.type)) {
 			this.type = type;
 			this.lhs = lhs;
 			this.rhs = rhs;
+			this.isRuleApplicationFail = false;
 		} else {
 			throw new Exception("Rule types dont match");
 		}

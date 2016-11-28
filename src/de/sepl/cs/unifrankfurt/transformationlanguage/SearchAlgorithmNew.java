@@ -20,7 +20,6 @@ import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTForStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
 import org.eclipse.text.edits.TextEditGroup;
@@ -67,7 +66,7 @@ public class SearchAlgorithmNew {
 		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 		Global(selectedNode);
 		System.out.println(migrations);
-		//Global(selectedNode);
+		Global(selectedNode);
 	}
 
 	private static void Global(IASTNode SN) throws Exception {
@@ -87,7 +86,7 @@ public class SearchAlgorithmNew {
 		Ndash = SUBST(Nr.nodes, Nr.rule);
 		addToSet(DONE, Nr.nodes, Ndash);
 
-		if (!isLastRuleFail) // N' not equals Fail scenario
+		if (!Nr.rule.isRuleApplicationFail) // N' not equals Fail scenario
 		{
 			if (Nr != null && Ndash != null) {
 				recordInAST(Nr, Ndash);
@@ -112,8 +111,7 @@ public class SearchAlgorithmNew {
 			addParent(node, dependencies);
 			for (IASTName objectref : visitor.getObjectrefs()) {
 				if (!visitor.visitedNames.contains(objectref)) {
-					if(objectref.toString().equals("i"))
-					{
+					if (objectref.toString().equals("i")) {
 						System.out.println("here");
 					}
 					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
@@ -167,8 +165,12 @@ public class SearchAlgorithmNew {
 			IASTNode declarationNr = getDeclaration(Nr.nodes);
 			IASTNode declarationNdash = getDeclaration(Ndash);
 
-			astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
-			astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
+			try {
+				astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
+				astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
+			} catch (Exception e) {
+
+			}
 		}
 	}
 
@@ -179,7 +181,7 @@ public class SearchAlgorithmNew {
 			if (nodes.size() == 1) {
 				IASTNode node = nodes.get(0);
 				Map<String, String> holeMap = TTLUtils.getHoleMap(rule.lhs.nodeWithHoles, node.getRawSignature());
-				applyScopedRule(rule.scopeFragmentMap, holeMap);
+				applyScopedRule(rule.scopeFragmentMap, holeMap, rule);
 				IASTNode nodeToReplace = null;
 				try {
 					nodeToReplace = TTLUtils.constructUsingHoleMap(holeMap, rule.rhs);
@@ -202,7 +204,7 @@ public class SearchAlgorithmNew {
 			definitionRule = definitionRule.replaceAll("\\s+", " ");
 
 			Map<String, String> holeMapDefinition = TTLUtils.getHoleMap(definitionRule, definition.getRawSignature());
-			applyScopedRule(rule.scopeFragmentMap, holeMapDefinition);
+			applyScopedRule(rule.scopeFragmentMap, holeMapDefinition, rule);
 
 			// Match Declaration
 			String declarationRule = "__ttltype__ " + str[1];
@@ -210,7 +212,7 @@ public class SearchAlgorithmNew {
 
 			Map<String, String> holeMapDeclaration = TTLUtils.getHoleMap(declarationRule,
 					declaration.getRawSignature());
-			applyScopedRule(rule.scopeFragmentMap, holeMapDeclaration);
+			applyScopedRule(rule.scopeFragmentMap, holeMapDeclaration, rule);
 
 			// Merge the holeMaps
 			Map<String, String> holeMap = new HashMap<String, String>();
@@ -249,7 +251,7 @@ public class SearchAlgorithmNew {
 		}
 		return returnNode;
 	}
-	
+
 	private static TypeMigration getTypeMigration(CPPASTCompositeTypeSpecifier definitionNode,
 			CPPASTCompositeTypeSpecifier nodeToReplace) {
 		String oldTypeName = definitionNode.getName().toString();
@@ -285,7 +287,6 @@ public class SearchAlgorithmNew {
 		return new TypeMigration(oldTypeName, newTypeName, fieldMapping);
 	}
 
-
 	private static void printReplacingString(IASTNode toReplace, IASTNode replaceWith) {
 		System.out.println("Attempting to replace");
 		System.out.println(toReplace.getRawSignature());
@@ -293,16 +294,16 @@ public class SearchAlgorithmNew {
 		System.out.println(replaceWith.getRawSignature());
 	}
 
-	private static void applyScopedRule(Map<Scope, String> scopeFragmentMap, Map<String, String> holeMap)
+	private static void applyScopedRule(Map<Scope, String> scopeFragmentMap, Map<String, String> holeMap, TTlRule rule)
 			throws Exception {
 		for (Scope scope : scopeFragmentMap.keySet()) {
 			String holeFragment = scopeFragmentMap.get(scope);
 			if (holeMap.containsKey(holeFragment)) {
 				String codeFragmentString = holeMap.get(holeFragment);
 				IASTNode codeFragment = TTLUtils.getNodeFromString(codeFragmentString);
-				ScopeVisitorNew scopeVisitor = new ScopeVisitorNew(scope);
+				ScopeVisitorNew scopeVisitor = new ScopeVisitorNew(scope, rule);
 				codeFragment.accept(scopeVisitor);
-				Map<String, String> nodeReplacements = scopeVisitor.getNodeReplacements();				
+				Map<String, String> nodeReplacements = scopeVisitor.getNodeReplacements();
 				Map<String, String> returnedTagValues = scopeVisitor.returnedTagValues;
 				Map<String, String> referenceReplacements = scopeVisitor.referenceReplacements;
 
@@ -314,12 +315,12 @@ public class SearchAlgorithmNew {
 					String replaceString = nodeReplacements.get(codeToFind);
 					codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
 				}
-				
+
 				for (String codeToFind : referenceReplacements.keySet()) {
 					String replaceString = referenceReplacements.get(codeToFind);
 					codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
 				}
-				
+
 				holeMap.put(holeFragment, codeFragmentString);
 			}
 		}
@@ -372,7 +373,7 @@ public class SearchAlgorithmNew {
 		}
 		return null;
 	}
-	
+
 	private static void printAlternateOption(Map<String, String> holeMap, TTlRule rl, IASTNode sN) {
 		System.out.println("Alternate option available");
 		System.out.println(sN.getRawSignature());
@@ -444,8 +445,8 @@ public class SearchAlgorithmNew {
 	}
 
 	private static void setRules() throws Exception {
-		 rules = VCSpecs.populateRules();
-		//rules = GMPSpecsNew.populateRules3();
+		rules = VCSpecs.populateRules();
+		// rules = GMPSpecsNew.populateRules3();
 		// rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}
