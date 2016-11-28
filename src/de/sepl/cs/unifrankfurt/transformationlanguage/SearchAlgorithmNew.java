@@ -55,6 +55,10 @@ public class SearchAlgorithmNew {
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
 		System.out.println("Beginning Search.....");
+		rules = new HashSet<TTlRule>();
+		WORKLIST = new LinkedList<IASTNode>();
+		DONE = new HashSet<IASTNode>();
+		visitor = new NameVisitor();
 		migrations = new Migrations();
 		SearchAlgorithmNew.ast = ast;
 		SearchAlgorithmNew.astRewrite = astRewrite;
@@ -63,6 +67,7 @@ public class SearchAlgorithmNew {
 		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 		Global(selectedNode);
 		System.out.println(migrations);
+		//Global(selectedNode);
 	}
 
 	private static void Global(IASTNode SN) throws Exception {
@@ -71,16 +76,6 @@ public class SearchAlgorithmNew {
 			IASTNode UNRESOLVED = WORKLIST.remove();
 			WorkBlock(UNRESOLVED);
 		}
-		ReferenceMigrator refMigrator = new ReferenceMigrator();
-		String codeFragmentString = ast.getRawSignature();
-		ast.accept(refMigrator);
-		Map<String, String> referenceReplacements = refMigrator.getReferenceReplacements();
-		for (String codeToFind : referenceReplacements.keySet()) {
-			String replaceString = referenceReplacements.get(codeToFind);
-			codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
-		}
-		System.out.println(codeFragmentString);
-
 	}
 
 	private static void WorkBlock(IASTNode SN) throws Exception {
@@ -309,6 +304,7 @@ public class SearchAlgorithmNew {
 				codeFragment.accept(scopeVisitor);
 				Map<String, String> nodeReplacements = scopeVisitor.getNodeReplacements();				
 				Map<String, String> returnedTagValues = scopeVisitor.returnedTagValues;
+				Map<String, String> referenceReplacements = scopeVisitor.referenceReplacements;
 
 				for (String tagKey : returnedTagValues.keySet()) {
 					holeMap.put(tagKey, returnedTagValues.get(tagKey));
@@ -317,7 +313,12 @@ public class SearchAlgorithmNew {
 				for (String codeToFind : nodeReplacements.keySet()) {
 					String replaceString = nodeReplacements.get(codeToFind);
 					codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
-				}			
+				}
+				
+				for (String codeToFind : referenceReplacements.keySet()) {
+					String replaceString = referenceReplacements.get(codeToFind);
+					codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
+				}
 				
 				holeMap.put(holeFragment, codeFragmentString);
 			}

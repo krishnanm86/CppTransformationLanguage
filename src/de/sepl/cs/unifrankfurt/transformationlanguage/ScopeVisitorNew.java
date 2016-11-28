@@ -108,12 +108,13 @@ public class ScopeVisitorNew extends ASTVisitor {
 		}
 		return super.visit(expression);
 	}
-	
-	private void addMaps(Map<String, String> holeMap, Map<String, String> parametersMap) {
-		for (String str : parametersMap.keySet()) {
-			holeMap.put(str, parametersMap.get(str));
-		}
 
+	private void addMaps(Map<String, String> holeMap, Map<String, String> parametersMap) {
+		if (parametersMap != null) {
+			for (String str : parametersMap.keySet()) {
+				holeMap.put(str, parametersMap.get(str));
+			}
+		}
 	}
 
 	private IASTExpression getRHSofLHS(IASTNode expression) throws Exception {
