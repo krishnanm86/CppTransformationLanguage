@@ -10,13 +10,17 @@ import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
 
+import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.cdt.core.dom.ast.IASTCompositeTypeSpecifier;
+import org.eclipse.cdt.core.dom.ast.IASTDeclSpecifier;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
+import org.eclipse.cdt.core.dom.ast.IASTDeclarator;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTCompositeTypeSpecifier;
+import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTForStatement;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
 import org.eclipse.text.edits.TextEditGroup;
@@ -67,6 +71,16 @@ public class SearchAlgorithmNew {
 			IASTNode UNRESOLVED = WORKLIST.remove();
 			WorkBlock(UNRESOLVED);
 		}
+		ReferenceMigrator refMigrator = new ReferenceMigrator();
+		String codeFragmentString = ast.getRawSignature();
+		ast.accept(refMigrator);
+		Map<String, String> referenceReplacements = refMigrator.getReferenceReplacements();
+		for (String codeToFind : referenceReplacements.keySet()) {
+			String replaceString = referenceReplacements.get(codeToFind);
+			codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
+		}
+		System.out.println(codeFragmentString);
+
 	}
 
 	private static void WorkBlock(IASTNode SN) throws Exception {
@@ -103,6 +117,10 @@ public class SearchAlgorithmNew {
 			addParent(node, dependencies);
 			for (IASTName objectref : visitor.getObjectrefs()) {
 				if (!visitor.visitedNames.contains(objectref)) {
+					if(objectref.toString().equals("i"))
+					{
+						System.out.println("here");
+					}
 					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
 						dependencies.add(use);
 					}
@@ -177,6 +195,7 @@ public class SearchAlgorithmNew {
 				returnNode.add(nodeToReplace);
 			}
 		} else {
+			TypeMigration typeMigration = null; // Apply Rule for definition
 			IASTNode definition = getDefinition(nodes);
 			IASTNode declaration = getDeclaration(nodes);
 
@@ -226,10 +245,51 @@ public class SearchAlgorithmNew {
 
 			returnNode.add(definitionToReplace);
 			returnNode.add(declarationToReplace);
+			typeMigration = getTypeMigration((CPPASTCompositeTypeSpecifier) definition,
+					(CPPASTCompositeTypeSpecifier) definitionToReplace);
+			String oldName = getVarNameFromDeclaration((IASTDeclaration) declaration);
+			String newName = getVarNameFromDeclaration((IASTDeclaration) declarationToReplace);
+			migrations.varMigrations.put(Pair.of(oldName, newName), typeMigration);
 
 		}
 		return returnNode;
 	}
+	
+	private static TypeMigration getTypeMigration(CPPASTCompositeTypeSpecifier definitionNode,
+			CPPASTCompositeTypeSpecifier nodeToReplace) {
+		String oldTypeName = definitionNode.getName().toString();
+		String newTypeName = nodeToReplace.getName().toString();
+		Map<Pair<String, String>, Pair<String, String>> fieldMapping = new HashMap<Pair<String, String>, Pair<String, String>>();
+		if (definitionNode.getDeclarations(true).length <= nodeToReplace.getDeclarations(true).length) {
+			for (int i = 0; i < definitionNode.getDeclarations(true).length; i++) {
+				if (definitionNode.getDeclarations(true)[i] instanceof CPPASTSimpleDeclaration
+						&& nodeToReplace.getDeclarations(true)[i] instanceof CPPASTSimpleDeclaration) {
+					IASTDeclSpecifier oldSpecifier = ((CPPASTSimpleDeclaration) definitionNode.getDeclarations(true)[i])
+							.getDeclSpecifier();
+					String oldType = oldSpecifier.getRawSignature();
+					String oldName = "";
+					IASTDeclarator[] oldDeclarators = ((CPPASTSimpleDeclaration) definitionNode
+							.getDeclarations(true)[i]).getDeclarators();
+					if (oldDeclarators.length == 1) {
+						oldName = oldDeclarators[0].getRawSignature();
+					}
+
+					IASTDeclSpecifier newSpecifier = ((CPPASTSimpleDeclaration) nodeToReplace.getDeclarations(true)[i])
+							.getDeclSpecifier();
+					String newType = newSpecifier.getRawSignature();
+					String newName = "";
+					IASTDeclarator[] newDeclarators = ((CPPASTSimpleDeclaration) nodeToReplace.getDeclarations(true)[i])
+							.getDeclarators();
+					if (newDeclarators.length == 1) {
+						newName = newDeclarators[0].getRawSignature();
+					}
+					fieldMapping.put(Pair.of(oldType, oldName), Pair.of(newType, newName));
+				}
+			}
+		}
+		return new TypeMigration(oldTypeName, newTypeName, fieldMapping);
+	}
+
 
 	private static void printReplacingString(IASTNode toReplace, IASTNode replaceWith) {
 		System.out.println("Attempting to replace");
@@ -247,7 +307,7 @@ public class SearchAlgorithmNew {
 				IASTNode codeFragment = TTLUtils.getNodeFromString(codeFragmentString);
 				ScopeVisitorNew scopeVisitor = new ScopeVisitorNew(scope);
 				codeFragment.accept(scopeVisitor);
-				Map<String, String> nodeReplacements = scopeVisitor.getNodeReplacements();
+				Map<String, String> nodeReplacements = scopeVisitor.getNodeReplacements();				
 				Map<String, String> returnedTagValues = scopeVisitor.returnedTagValues;
 
 				for (String tagKey : returnedTagValues.keySet()) {
@@ -257,8 +317,8 @@ public class SearchAlgorithmNew {
 				for (String codeToFind : nodeReplacements.keySet()) {
 					String replaceString = nodeReplacements.get(codeToFind);
 					codeFragmentString = codeFragmentString.replace(codeToFind, replaceString);
-				}
-
+				}			
+				
 				holeMap.put(holeFragment, codeFragmentString);
 			}
 		}
@@ -305,6 +365,13 @@ public class SearchAlgorithmNew {
 		return null;
 	}
 
+	private static String getVarNameFromDeclaration(IASTDeclaration declarationNode) {
+		if (((CPPASTSimpleDeclaration) declarationNode).getDeclarators().length == 1) {
+			return ((CPPASTSimpleDeclaration) declarationNode).getDeclarators()[0].getName().toString();
+		}
+		return null;
+	}
+	
 	private static void printAlternateOption(Map<String, String> holeMap, TTlRule rl, IASTNode sN) {
 		System.out.println("Alternate option available");
 		System.out.println(sN.getRawSignature());
@@ -376,8 +443,8 @@ public class SearchAlgorithmNew {
 	}
 
 	private static void setRules() throws Exception {
-		// rules = VCSpecs.populateRules();
-		rules = GMPSpecsNew.populateRules3();
+		 rules = VCSpecs.populateRules();
+		//rules = GMPSpecsNew.populateRules3();
 		// rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}

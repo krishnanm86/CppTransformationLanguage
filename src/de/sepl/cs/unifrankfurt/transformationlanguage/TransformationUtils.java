@@ -3,10 +3,13 @@ package de.sepl.cs.unifrankfurt.transformationlanguage;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
+import org.eclipse.cdt.core.dom.ast.IASTStatement;
 import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
 import org.eclipse.cdt.core.dom.ast.IBinding;
+import org.eclipse.cdt.core.model.ITranslationUnit;
 import org.eclipse.cdt.internal.core.dom.parser.c.CParameter;
 import org.eclipse.cdt.internal.core.dom.parser.c.CVariable;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPClassType;
@@ -37,15 +40,28 @@ public class TransformationUtils {
 	public static List<IASTNode> getUses(IASTName objectRef, IASTTranslationUnit ast) {
 		ArrayList<IASTNode> uses = new ArrayList<IASTNode>();
 		IBinding binding = objectRef.getBinding();
-		if (binding instanceof CPPVariable || binding instanceof CVariable || binding instanceof CParameter || binding instanceof CPPParameter) {
+		if (binding instanceof CPPVariable || binding instanceof CVariable || binding instanceof CParameter
+				|| binding instanceof CPPParameter) {
 			for (IASTName name : ast.getReferences(binding)) {
-				uses.add(name);
+				addUses(uses, name);
 			}
 			for (IASTName name : ast.getDeclarationsInAST(binding)) {
-				uses.add(name);
+				addUses(uses, name);
 			}
 		}
 		return uses;
+	}
+
+	public static void addUses(ArrayList<IASTNode> uses, IASTName name) {
+		IASTNode use = name;
+		while (use.getParent() != null && !(use.getParent() instanceof ITranslationUnit)
+				&& !(use.getParent() instanceof IASTStatement)) {
+			uses.add(use.getParent());
+			use = use.getParent();
+		}
+		if (use.getParent() instanceof IASTStatement) {
+			uses.add(use.getParent());
+		}
 	}
 
 }

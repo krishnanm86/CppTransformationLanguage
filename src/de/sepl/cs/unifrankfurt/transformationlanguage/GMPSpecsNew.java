@@ -163,6 +163,14 @@ public class GMPSpecsNew {
 	public static Set<TTlRule> populateRules3() throws Exception {
 
 		Set<TTlRule> rules = new HashSet<TTlRule>();
+
+		
+
+		TTlExpression rulePattern12 = new TTlExpression("int __ttlp1__, __ttlp2__;", NodeType.Declaration);
+		TTlExpression ruleConstructExpression12 = new TTlExpression("int __ttlp1__, __ttlp2__;",
+				NodeType.Declaration);
+		rules.add(new TTlRule(rulePattern12, ruleConstructExpression12, NodeType.Declaration, new HashMap<Scope, String>(),
+				new HashMap<Tag, String>()));
 		
 		TTlExpression rulePattern1 = new TTlExpression("int __ttlp__", NodeType.Declaration);
 		TTlExpression ruleConstructExpression1 = new TTlExpression("mpz_t __ttlp__",
@@ -176,12 +184,13 @@ public class GMPSpecsNew {
 		rules.add(new TTlRule(rulePattern31, ruleConstructExpression31, NodeType.Expression,
 				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
 		
-		TTlExpression rulePattern32 = new TTlExpression("A", NodeType.Expression);
-		TTlExpression ruleConstructExpression32 = new TTlExpression("A",
+		TTlExpression rulePattern32 = new TTlExpression("__ttlp1__[__ttlp2__]", NodeType.Expression);
+		TTlExpression ruleConstructExpression32 = new TTlExpression("__ttlp1__[__ttlp2__]",
 				NodeType.Expression);
 		rules.add(new TTlRule(rulePattern32, ruleConstructExpression32, NodeType.Expression,
 				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
 		
+
 		return rules;
 		
 	}

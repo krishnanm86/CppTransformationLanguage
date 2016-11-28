@@ -17,15 +17,16 @@ import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 public class TTLTest {
 
 	public static void main(String[] args) throws Exception {
-		
-		TTlExpression rulePattern2 = new TTlExpression("if (__ttlc__) __ttlx__ += __ttle__;", NodeType.Statement);
-		TTlExpression ruleConstructExpression2 = new TTlExpression("__ttlx__(__ttlc__) += __ttle__", NodeType.Statement);
-		
-		
-		TTlExpression addExpr = new TTlExpression("if (output[i].phi < 0.f) output[i].phi  += 360.f;", NodeType.Statement);
+
+		TTlExpression rulePattern2 = new TTlExpression(
+				"for (int i = 0; i < __ttllimit__; __ttli__++) { __ttlforbody__ }", NodeType.Statement);
+		TTlExpression ruleConstructExpression2 = new TTlExpression(
+				"for (int i = 0; i < 1000; i++) { float temp1 = input[i].x; float temp2 = input[i].y; output[i].r = std::sqrt((x * x) + (y * y)); output[i].phi = std::atan2(y, x) * 57.29578018188476f; if (output[i].phi < 0.f) { output[i].phi += 360.f; } }",
+				NodeType.Statement);
+
+	
 		StringTemplate matcher = new StringTemplate(rulePattern2.nodeWithHoles);
-		Map<String, String> holeMap = matcher.parse(addExpr.nodeWithHoles);
-		System.out.println(holeMap);
-		System.out.println(TTLUtils.constructUsingHoleMap(holeMap, ruleConstructExpression2).getRawSignature());
+		Map<String, String> holeMap = matcher.parse(ruleConstructExpression2.nodeWithHoles);
+		System.out.println(holeMap);	
 	}
 }

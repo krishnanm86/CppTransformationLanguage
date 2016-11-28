@@ -15,9 +15,9 @@ public class VCSpecs {
 		Set<TTlRule> rules = new HashSet<TTlRule>();
 
 		TTlExpression ttlPattern = new TTlExpression(
-				"for (int i = 0; i < __ttllimit__; __ttli__++) { __ttlforbody__; }", NodeType.Statement);
+				"for (int i = 0; i < __ttllimit__; __ttli__++) { __ttlforbody__ }", NodeType.Statement);
 		TTlExpression ttlConstructExpression = new TTlExpression(
-				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/__tagttlvctypeloop__::size; __ttli__++ ) { __ttlforbody__;  }",
+				"for(int __ttli__ = 0 ; __ttli__ < __ttllimit__/__tagttlvctypeloop__::size; __ttli__++ ) { __ttlforbody__  }",
 				NodeType.Statement);
 
 		TTlExpression ttlPattern1 = new TTlExpression(

@@ -90,17 +90,14 @@ public class ScopeVisitorNew extends ASTVisitor {
 
 	@Override
 	public int visit(IASTExpression expression) {
-		applyRule(expression, NodeType.Expression);
-		/*System.out.println("visiting" + expression.getRawSignature());
 		if (expression instanceof CPPASTFieldReference) {
 			try {
-				if (!SearchAlgorithm.migrations.getMigratedName(expression.getRawSignature())
+				if (!SearchAlgorithmNew.migrations.getMigratedName(expression.getRawSignature())
 						.equals(expression.getRawSignature())) {
-					String migratedExpression = SearchAlgorithm.migrations
+					String migratedExpression = SearchAlgorithmNew.migrations
 							.getMigratedName(expression.getRawSignature());
 					referenceReplacements.put(expression.getRawSignature(), migratedExpression);
 					System.out.println("Migrating " + expression.getRawSignature() + " to " + migratedExpression);
-
 				}
 				applyRule(expression, NodeType.Expression);
 			} catch (Exception e) {
@@ -109,13 +106,14 @@ public class ScopeVisitorNew extends ASTVisitor {
 		} else {
 			applyRule(expression, NodeType.Expression);
 		}
-		try {
-			getRHSofLHS(expression);
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}*/
 		return super.visit(expression);
+	}
+	
+	private void addMaps(Map<String, String> holeMap, Map<String, String> parametersMap) {
+		for (String str : parametersMap.keySet()) {
+			holeMap.put(str, parametersMap.get(str));
+		}
+
 	}
 
 	private IASTExpression getRHSofLHS(IASTNode expression) throws Exception {
@@ -183,6 +181,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 				Map<String, String> holeMap = null;
 				try {
 					holeMap = TTLUtils.getHoleMapRemoveLastSemiColon(pattern, fragmentToMatch);
+					addMaps(holeMap, scope.parametersMap);
 					if (holeMap.size() > 0) {
 						// Transform the code
 						String transformedFragment = TTLUtils
@@ -231,14 +230,16 @@ public class ScopeVisitorNew extends ASTVisitor {
 	}
 
 	private void updateTagWithoutWhereClaus(Map<String, String> tagUpdates) {
-		for (String tag : tagUpdates.keySet()) {
-			// Find out if tag value has existing update
-			if (returnedTagValues.containsKey(tag)) {
-				if (!returnedTagValues.get(tag).equals(tagUpdates.get(tag))) {
-					returnedTagValues.put(tag, ScopeRule.tagEmpty);
+		if (tagUpdates != null) {
+			for (String tag : tagUpdates.keySet()) {
+				// Find out if tag value has existing update
+				if (returnedTagValues.containsKey(tag)) {
+					if (!returnedTagValues.get(tag).equals(tagUpdates.get(tag))) {
+						returnedTagValues.put(tag, ScopeRule.tagEmpty);
+					}
+				} else {
+					returnedTagValues.put(tag, tagUpdates.get(tag));
 				}
-			} else {
-				returnedTagValues.put(tag, tagUpdates.get(tag));
 			}
 		}
 	}

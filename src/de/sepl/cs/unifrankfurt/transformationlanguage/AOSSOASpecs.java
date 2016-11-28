@@ -51,8 +51,8 @@ public class AOSSOASpecs {
 		Map<String, String> structTagValueMap = new HashMap<String, String>();
 		Scope structScope = new Scope(structScopeRules, structTagValueMap);
 
-		Map<String, List<IASTNode>> params = new HashMap<String, List<IASTNode>>();
-		params.put("__ttlarraysize__", new ArrayList<IASTNode>());
+		Map<String, String> params = new HashMap<String, String>();
+		params.put("__ttlarraysize__", ScopeRule.tagEmpty);
 		structScope.setParametersMap(params);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();
 		scopeFragMentMap.put(structScope, "__ttlstructbody__");

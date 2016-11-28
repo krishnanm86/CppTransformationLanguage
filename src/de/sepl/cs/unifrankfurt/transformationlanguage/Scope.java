@@ -14,17 +14,17 @@ public class Scope {
 
 	List<ScopeRule> rules;
 	Map<String, String> tagValueMap, referenceMap;
-	Map<String, List<IASTNode>> parametersMap;
+	Map<String, String> parametersMap;
 
 	public void setReferenceMap(Map<String, String> referenceMap) {
 		this.referenceMap = referenceMap;
 	}
 
-	public Map<String, List<IASTNode>> getParametersMap() {
+	public Map<String, String> getParametersMap() {
 		return parametersMap;
 	}
 
-	public void setParametersMap(Map<String, List<IASTNode>> parametersMap) {
+	public void setParametersMap(Map<String, String> parametersMap) {
 		this.parametersMap = parametersMap;
 	}
 }

@@ -32,12 +32,12 @@ public class NameVisitor extends ASTVisitor {
 
 	@Override
 	public int visit(IASTName name) {
-		if ((name.getParent().getParent() instanceof IASTArraySubscriptExpression)) {
+		/*if ((name.getParent().getParent() instanceof IASTArraySubscriptExpression)) {
 			IASTArraySubscriptExpression expr = (IASTArraySubscriptExpression) name.getParent().getParent();
 			if (expr.getChildren()[1].equals(name.getParent())) {
 				return super.visit(name);
 			}
-		}
+		}*/
 		names.add(name);
 		if (name.getBinding() instanceof CPPClassType) {
 			typerefs.add(name);

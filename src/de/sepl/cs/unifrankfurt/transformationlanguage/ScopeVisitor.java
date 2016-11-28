@@ -194,7 +194,7 @@ public class ScopeVisitor extends ASTVisitor {
 				Map<String, List<IASTNode>> holeMap = null;
 				try {
 					holeMap = TTLUtils.match(ttlPattern, ttlFragmentToMatch);
-					addMaps(holeMap, scope.parametersMap);
+					//addMaps(holeMap, scope.parametersMap);
 					if (holeMap.size() > 0) {
 						TTLUtils.printHoleMap(holeMap);
 						scope.tagValueMap.put(node.getRawSignature(),
