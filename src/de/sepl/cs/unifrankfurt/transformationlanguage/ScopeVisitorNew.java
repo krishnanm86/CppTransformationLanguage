@@ -1,25 +1,17 @@
 package de.sepl.cs.unifrankfurt.transformationlanguage;
 
-import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.lang3.tuple.Pair;
 import org.eclipse.cdt.core.dom.ast.ASTVisitor;
-import org.eclipse.cdt.core.dom.ast.IASTBinaryExpression;
 import org.eclipse.cdt.core.dom.ast.IASTDeclaration;
 import org.eclipse.cdt.core.dom.ast.IASTExpression;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
-import org.eclipse.cdt.core.dom.ast.IASTTranslationUnit;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTArraySubscriptExpression;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTBinaryExpression;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTFieldReference;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTIdExpression;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTNamedTypeSpecifier;
-import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPASTSimpleDeclaration;
+
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
 @SuppressWarnings({ "restriction" })
@@ -77,7 +69,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 	@Override
 	public int visit(IASTName name) {
 		try {
-			for (Pair<String, String> varMigration : SearchAlgorithm.migrations.varMigrations.keySet()) {
+			for (Pair<String, String> varMigration : SearchAlgorithmNew.migrations.varMigrations.keySet()) {
 				if (name.toString().equals(varMigration.getLeft())) {
 					referenceReplacements.put(name.toString(), varMigration.getRight());
 				}
@@ -115,55 +107,6 @@ public class ScopeVisitorNew extends ASTVisitor {
 			for (String str : parametersMap.keySet()) {
 				holeMap.put(str, parametersMap.get(str));
 			}
-		}
-	}
-
-	private IASTExpression getRHSofLHS(IASTNode expression) throws Exception {
-		while (!(expression instanceof CPPASTBinaryExpression) && !(expression instanceof IASTTranslationUnit)
-				&& (expression != null)) {
-			expression = expression.getParent();
-		}
-		if (expression instanceof CPPASTBinaryExpression) {
-			if ((((CPPASTBinaryExpression) expression).getOperator() == IASTBinaryExpression.op_assign)
-					&& (((CPPASTBinaryExpression) expression).getOperand1() instanceof CPPASTFieldReference)) {
-				CPPASTFieldReference ref = (CPPASTFieldReference) ((CPPASTBinaryExpression) expression).getOperand1();
-				System.out.println("Need to find definition of " + ref.getRawSignature());
-				IASTName name = null;
-				if (ref.getFieldOwner() instanceof CPPASTArraySubscriptExpression) {
-					// Array Subscript case
-					if (((CPPASTArraySubscriptExpression) ref.getFieldOwner())
-							.getArrayExpression() instanceof CPPASTIdExpression) {
-						name = ((CPPASTIdExpression) ((CPPASTArraySubscriptExpression) ref.getFieldOwner())
-								.getArrayExpression()).getName();
-					}
-				} else if (ref.getFieldOwner() instanceof CPPASTIdExpression) {
-					// Normal field reference case
-					name = ((CPPASTIdExpression) ref.getFieldOwner()).getName();
-				}
-				if (name != null) {
-					findAndApplyRule(name);
-				}
-			}
-		}
-		return null;
-	}
-
-	private void findAndApplyRule(IASTName name) throws Exception {
-		List<IASTNode> enclosingNode = new ArrayList<IASTNode>();
-		for (IASTDeclaration decl : SearchAlgorithm.ast.getDeclarations()) {
-			if (decl.getRawSignature().contains(name.toString())) {
-				enclosingNode.add(decl);
-				if (decl instanceof CPPASTSimpleDeclaration
-						&& ((CPPASTSimpleDeclaration) decl).getDeclSpecifier() instanceof CPPASTNamedTypeSpecifier) {
-					IASTName nameDecl = ((CPPASTNamedTypeSpecifier) ((CPPASTSimpleDeclaration) decl).getDeclSpecifier())
-							.getName();
-					enclosingNode.add(TransformationUtils.getDefns(nameDecl));
-				}
-			}
-		}
-		TTlRule rule = SearchAlgorithm.ruleApplicable(enclosingNode);
-		if (SearchAlgorithm.applyRule(rule, enclosingNode) && rule != null) {
-			SearchAlgorithm.AppliedRules.put(enclosingNode, rule);
 		}
 	}
 

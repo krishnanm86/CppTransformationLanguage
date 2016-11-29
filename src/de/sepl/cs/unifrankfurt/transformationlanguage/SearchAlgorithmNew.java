@@ -51,6 +51,7 @@ public class SearchAlgorithmNew {
 	private static ASTRewrite astRewrite;
 	public static Migrations migrations = new Migrations();
 	public static boolean isLastRuleFail = false;
+	static boolean collectReferences = false;
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
 		System.out.println("Beginning Search.....");
@@ -64,8 +65,11 @@ public class SearchAlgorithmNew {
 		setRules();
 		visitor = new NameVisitor();
 		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
+		/*collectReferences = true;
 		Global(selectedNode);
+		System.out.println("First pass done");
 		System.out.println(migrations);
+		collectReferences = false;*/
 		Global(selectedNode);
 	}
 
@@ -111,9 +115,6 @@ public class SearchAlgorithmNew {
 			addParent(node, dependencies);
 			for (IASTName objectref : visitor.getObjectrefs()) {
 				if (!visitor.visitedNames.contains(objectref)) {
-					if (objectref.toString().equals("i")) {
-						System.out.println("here");
-					}
 					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
 						dependencies.add(use);
 					}
@@ -135,12 +136,14 @@ public class SearchAlgorithmNew {
 	private static void addParent(IASTNode node, List<IASTNode> dependencies) {
 		if (!(node.getParent() instanceof IASTTranslationUnit)) {
 			dependencies.add(node.getParent());
-			if (!(node.getParent().getParent() instanceof IASTTranslationUnit)) {
-				dependencies.add(node.getParent().getParent());
-				if (!(node.getParent().getParent().getParent() instanceof IASTTranslationUnit)) {
-					dependencies.add(node.getParent().getParent().getParent());
-				}
-			}
+			/*
+			 * if (!(node.getParent().getParent() instanceof
+			 * IASTTranslationUnit)) {
+			 * dependencies.add(node.getParent().getParent()); if
+			 * (!(node.getParent().getParent().getParent() instanceof
+			 * IASTTranslationUnit)) {
+			 * dependencies.add(node.getParent().getParent().getParent()); } }
+			 */
 		}
 	}
 
@@ -157,7 +160,9 @@ public class SearchAlgorithmNew {
 		if (Nr.nodes.size() == 1 && Ndash.size() == 1) {
 			if (Ndash.get(0) != null) {
 				printReplacingString(Nr.nodes.get(0), Ndash.get(0));
-				astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
+				if (!collectReferences) {
+					astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
+				}
 			}
 		} else if (Nr.rule.type == NodeType.DeclDefn && Nr.nodes.size() == 2 && Ndash.size() == 2) {
 			IASTNode definitionNr = getDefinition(Nr.nodes);
@@ -166,8 +171,10 @@ public class SearchAlgorithmNew {
 			IASTNode declarationNdash = getDeclaration(Ndash);
 
 			try {
-				astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
-				astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
+				if (!collectReferences) {
+					astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
+					astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
+				}
 			} catch (Exception e) {
 
 			}
@@ -247,6 +254,8 @@ public class SearchAlgorithmNew {
 			String oldName = getVarNameFromDeclaration((IASTDeclaration) declaration);
 			String newName = getVarNameFromDeclaration((IASTDeclaration) declarationToReplace);
 			migrations.varMigrations.put(Pair.of(oldName, newName), typeMigration);
+			System.out.println("Putting in migration");
+			System.out.println(migrations);
 
 		}
 		return returnNode;

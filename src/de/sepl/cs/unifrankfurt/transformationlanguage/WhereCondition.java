@@ -43,8 +43,8 @@ public class WhereCondition {
 						.getRawSignature();
 			}
 			System.out.println(
-					"Where condition check " + condition + " == " + SearchAlgorithm.migrations.getType(nameOfVar));
-			return SearchAlgorithm.migrations.getType(nameOfVar).equals(typeToCheckWith);
+					"Where condition check " + condition + " == " + SearchAlgorithmNew.migrations.getType(nameOfVar));
+			return SearchAlgorithmNew.migrations.getType(nameOfVar).equals(typeToCheckWith);
 		} else {
 			return false;
 		}
@@ -59,7 +59,7 @@ public class WhereCondition {
 						.getRawSignature();
 			}
 			System.out.println(
-					"Where condition check " + condition + " == " + SearchAlgorithm.migrations.getType(nameOfVar));
+					"Where condition check " + condition + " == " + SearchAlgorithmNew.migrations.getType(nameOfVar));
 			return SearchAlgorithmNew.migrations.getType(nameOfVar).equals(typeToCheckWith);
 		} else {
 			return false;
