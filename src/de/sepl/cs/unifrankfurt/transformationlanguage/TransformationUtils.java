@@ -64,6 +64,11 @@ public class TransformationUtils {
 			uses.add(use.getParent());
 			use = use.getParent();
 		}
+		if (use.getParent() != null && !(use.getParent() instanceof ITranslationUnit)
+				&& !(use.getParent() instanceof IASTStatement)) {
+			uses.add(use.getParent());
+			use = use.getParent();
+		}
 		if (use.getParent() instanceof IASTStatement) {
 			uses.add(use.getParent());
 		}

@@ -19,10 +19,10 @@ public class AOSSOASpecs {
 		TTlExpression ttlPattern1 = new TTlExpression(
 				"struct __ttlstructname__ { __ttlstructbody__; } __ttlaobj__[__ttlarraysize__];", NodeType.DeclDefn);
 		TTlExpression ttlConstructExpression1 = new TTlExpression(
-				"struct __ttlstructname___v { __ttlstructbody__; } __ttlaobj__;", NodeType.DeclDefn);
+				"struct __ttlstructname__ { __ttlstructbody__; } __ttlaobj__;", NodeType.DeclDefn);
 
-		TTlExpression ttlPattern2 = new TTlExpression("__ttlname__.__ttlfield__[__ttli__]", NodeType.Expression);
-		TTlExpression ttlConstructExpression2 = new TTlExpression("__ttlname__[__ttli__].__ttlfield__",
+		TTlExpression ttlPattern2 = new TTlExpression("__ttlname__[__ttli__].__ttlfield__", NodeType.Expression);
+		TTlExpression ttlConstructExpression2 = new TTlExpression("__ttlname__.__ttlfield__[__ttli__]",
 				NodeType.Expression);
 
 		rules.add(new TTlRule(ttlPattern1, ttlConstructExpression1, NodeType.DeclDefn, getScopeFragMentMapStruct(),
@@ -44,7 +44,7 @@ public class AOSSOASpecs {
 		NodeType ruleType = NodeType.Declaration;
 		Map<String, String> arraysubscripttagUpdates = new HashMap<String, String>();
 		List<ScopeRule> structScopeRules = new ArrayList<ScopeRule>();
-		String rhs = "__ttltype__ __ttla__[__ttlarraysize__];";
+		String rhs = "__ttltype__ __ttla__[__ttlarrparam__];";
 		ScopeRule arraysubscriptRule = new ScopeRule(lhs, rhs, ruleType, arraysubscripttagUpdates);
 		structScopeRules.add(arraysubscriptRule);
 
@@ -52,7 +52,7 @@ public class AOSSOASpecs {
 		Scope structScope = new Scope(structScopeRules, structTagValueMap);
 
 		Map<String, String> params = new HashMap<String, String>();
-		params.put("__ttlarraysize__", ScopeRule.tagEmpty);
+		params.put("__ttlarrparam__", "__ttlarraysize__");
 		structScope.setParametersMap(params);
 		Map<Scope, String> scopeFragMentMap = new HashMap<Scope, String>();
 		scopeFragMentMap.put(structScope, "__ttlstructbody__");

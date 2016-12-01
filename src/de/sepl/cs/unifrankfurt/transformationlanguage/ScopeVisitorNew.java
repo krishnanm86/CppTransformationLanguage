@@ -21,6 +21,7 @@ public class ScopeVisitorNew extends ASTVisitor {
 	Map<String, String> nodeReplacements;
 	Map<String, String> referenceReplacements;
 	Map<String, String> returnedTagValues;
+	Map<String, String> containingHoleMap;
 	private TTlRule rule;
 
 	public Scope getScope() {
@@ -47,11 +48,12 @@ public class ScopeVisitorNew extends ASTVisitor {
 		this.referenceReplacements = referenceReplacements;
 	}
 
-	public ScopeVisitorNew(Scope scope, TTlRule rule) {
+	public ScopeVisitorNew(Scope scope, TTlRule rule, Map<String, String> holeMap) {
 		this.scope = scope;
 		nodeReplacements = new HashMap<String, String>();
 		referenceReplacements = new HashMap<String, String>();
 		returnedTagValues = new HashMap<String, String>();
+		containingHoleMap = holeMap;
 		shouldVisitDeclarations = true;
 		shouldVisitStatements = true;
 		shouldVisitExpressions = true;
@@ -103,7 +105,11 @@ public class ScopeVisitorNew extends ASTVisitor {
 	private void addMaps(Map<String, String> holeMap, Map<String, String> parametersMap) {
 		if (parametersMap != null) {
 			for (String str : parametersMap.keySet()) {
-				holeMap.put(str, parametersMap.get(str));
+				if (containingHoleMap.containsKey(str)) {
+					holeMap.put(str, containingHoleMap.get(str));
+				} else {
+					holeMap.put(str, parametersMap.get(str));
+				}
 			}
 		}
 	}

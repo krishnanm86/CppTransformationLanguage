@@ -53,35 +53,6 @@ public class SearchAlgorithmNew {
 	public static boolean isLastRuleFail = false;
 	static boolean performRewrite = false;
 
-	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
-
-		init(ast, astRewrite, new Migrations());
-		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
-		/* Collect reference updates for automatic renaming */
-		Global(selectedNode);
-		System.out.println("First pass done");
-		System.out.println(migrations);
-
-		System.out.println("Beginning Search and data migration.....");
-		init(ast, astRewrite, migrations);
-		performRewrite = true;
-		Global(selectedNode);
-	}
-
-	private static void init(IASTTranslationUnit ast, ASTRewrite astRewrite, Migrations migr) throws Exception {
-		rules = new HashSet<TTlRule>();
-		WORKLIST = new LinkedList<IASTNode>();
-		DONE = new HashSet<IASTNode>();
-		visitor = new NameVisitor();
-		migrations = migr;
-		SearchAlgorithmNew.ast = ast;
-		SearchAlgorithmNew.astRewrite = astRewrite;
-		setRules();
-		visitor = new NameVisitor();
-		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
-
-	}
-
 	private static void Global(IASTNode SN) throws Exception {
 		WorkBlock(SN);
 		while (!WORKLIST.isEmpty()) {
@@ -166,11 +137,15 @@ public class SearchAlgorithmNew {
 	}
 
 	private static void recordInAST(NodewRule Nr, List<IASTNode> Ndash) {
+
 		if (Nr.nodes.size() == 1 && Ndash.size() == 1) {
 			if (Ndash.get(0) != null) {
 				printReplacingString(Nr.nodes.get(0), Ndash.get(0));
-				if (performRewrite) {
-					astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
+				try {
+					if (performRewrite) {
+						astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
+					}
+				} catch (Exception e) {
 				}
 			}
 		} else if (Nr.rule.type == NodeType.DeclDefn && Nr.nodes.size() == 2 && Ndash.size() == 2) {
@@ -185,7 +160,6 @@ public class SearchAlgorithmNew {
 					astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
 				}
 			} catch (Exception e) {
-
 			}
 		}
 	}
@@ -316,7 +290,7 @@ public class SearchAlgorithmNew {
 			if (holeMap.containsKey(holeFragment)) {
 				String codeFragmentString = holeMap.get(holeFragment);
 				IASTNode codeFragment = TTLUtils.getNodeFromString(codeFragmentString);
-				ScopeVisitorNew scopeVisitor = new ScopeVisitorNew(scope, rule);
+				ScopeVisitorNew scopeVisitor = new ScopeVisitorNew(scope, rule, holeMap);
 				codeFragment.accept(scopeVisitor);
 				Map<String, String> nodeReplacements = scopeVisitor.getNodeReplacements();
 				Map<String, String> returnedTagValues = scopeVisitor.returnedTagValues;
@@ -459,10 +433,39 @@ public class SearchAlgorithmNew {
 		return null;
 	}
 
+	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
+
+		init(ast, astRewrite, new Migrations());
+		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
+		/* Collect reference updates for automatic renaming */
+		Global(selectedNode);
+		System.out.println("First pass done");
+		System.out.println(migrations);
+
+		System.out.println("Beginning Search and data migration.....");
+		init(ast, astRewrite, migrations);
+		performRewrite = true;
+		Global(selectedNode);
+	}
+
+	private static void init(IASTTranslationUnit ast, ASTRewrite astRewrite, Migrations migr) throws Exception {
+		rules = new HashSet<TTlRule>();
+		WORKLIST = new LinkedList<IASTNode>();
+		DONE = new HashSet<IASTNode>();
+		visitor = new NameVisitor();
+		migrations = migr;
+		SearchAlgorithmNew.ast = ast;
+		SearchAlgorithmNew.astRewrite = astRewrite;
+		setRules();
+		visitor = new NameVisitor();
+		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
+
+	}
+
 	private static void setRules() throws Exception {
-		rules = VCSpecs.populateRules();
+		// rules = VCSpecs.populateRules();
 		// rules = GMPSpecsNew.populateRules3();
-		// rules = AOSSOASpecs.populateRules();
+		rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}
 }
