@@ -42,24 +42,21 @@ public class WhereCondition {
 				nameOfVar = TTLUtils.construct(holeMap, new TTlExpression(nameOfVar, NodeType.Expression))
 						.getRawSignature();
 			}
-			System.out.println(
-					"Where condition check " + condition + " == " + SearchAlgorithmNew.migrations.getType(nameOfVar));
 			return SearchAlgorithmNew.migrations.getType(nameOfVar).equals(typeToCheckWith);
 		} else {
 			return false;
 		}
 	}
-	
+
 	public boolean checkNew() throws Exception {
 		if (condition.startsWith("decltype")) {
 			String typeToCheckWith = condition.substring(condition.indexOf("==") + 2, condition.length()).trim();
 			String nameOfVar = condition.substring(condition.indexOf("(") + 1, condition.indexOf(")")).trim();
 			if (holeMapNew != null) {
-				nameOfVar = TTLUtils.constructUsingHoleMap(holeMapNew, new TTlExpression(nameOfVar, NodeType.Expression))
+				nameOfVar = TTLUtils
+						.constructUsingHoleMap(holeMapNew, new TTlExpression(nameOfVar, NodeType.Expression))
 						.getRawSignature();
 			}
-			System.out.println(
-					"Where condition check " + condition + " == " + SearchAlgorithmNew.migrations.getType(nameOfVar));
 			return SearchAlgorithmNew.migrations.getType(nameOfVar).equals(typeToCheckWith);
 		} else {
 			return false;

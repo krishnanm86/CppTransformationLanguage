@@ -61,7 +61,6 @@ public class ScopeVisitorNew extends ASTVisitor {
 
 	@Override
 	public int visit(IASTDeclaration declaration) {
-		System.out.println("visiting" + declaration.getRawSignature());
 		applyRule(declaration, NodeType.Declaration);
 		return super.visit(declaration);
 	}
@@ -90,7 +89,6 @@ public class ScopeVisitorNew extends ASTVisitor {
 					String migratedExpression = SearchAlgorithmNew.migrations
 							.getMigratedName(expression.getRawSignature());
 					referenceReplacements.put(expression.getRawSignature(), migratedExpression);
-					System.out.println("Migrating " + expression.getRawSignature() + " to " + migratedExpression);
 				}
 				applyRule(expression, NodeType.Expression);
 			} catch (Exception e) {
@@ -112,7 +110,6 @@ public class ScopeVisitorNew extends ASTVisitor {
 
 	@Override
 	public int visit(IASTStatement statement) {
-		System.out.println("visiting" + statement.getRawSignature());
 		applyRule(statement, NodeType.Statement);
 		return super.visit(statement);
 	}

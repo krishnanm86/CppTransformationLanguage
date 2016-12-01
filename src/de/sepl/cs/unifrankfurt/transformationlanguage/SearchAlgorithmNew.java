@@ -51,26 +51,35 @@ public class SearchAlgorithmNew {
 	private static ASTRewrite astRewrite;
 	public static Migrations migrations = new Migrations();
 	public static boolean isLastRuleFail = false;
-	static boolean collectReferences = false;
+	static boolean performRewrite = false;
 
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
-		System.out.println("Beginning Search.....");
+
+		init(ast, astRewrite, new Migrations());
+		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
+		/* Collect reference updates for automatic renaming */
+		Global(selectedNode);
+		System.out.println("First pass done");
+		System.out.println(migrations);
+
+		System.out.println("Beginning Search and data migration.....");
+		init(ast, astRewrite, migrations);
+		performRewrite = true;
+		Global(selectedNode);
+	}
+
+	private static void init(IASTTranslationUnit ast, ASTRewrite astRewrite, Migrations migr) throws Exception {
 		rules = new HashSet<TTlRule>();
 		WORKLIST = new LinkedList<IASTNode>();
 		DONE = new HashSet<IASTNode>();
 		visitor = new NameVisitor();
-		migrations = new Migrations();
+		migrations = migr;
 		SearchAlgorithmNew.ast = ast;
 		SearchAlgorithmNew.astRewrite = astRewrite;
 		setRules();
 		visitor = new NameVisitor();
 		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
-		/*collectReferences = true;
-		Global(selectedNode);
-		System.out.println("First pass done");
-		System.out.println(migrations);
-		collectReferences = false;*/
-		Global(selectedNode);
+
 	}
 
 	private static void Global(IASTNode SN) throws Exception {
@@ -160,7 +169,7 @@ public class SearchAlgorithmNew {
 		if (Nr.nodes.size() == 1 && Ndash.size() == 1) {
 			if (Ndash.get(0) != null) {
 				printReplacingString(Nr.nodes.get(0), Ndash.get(0));
-				if (!collectReferences) {
+				if (performRewrite) {
 					astRewrite.replace(Nr.nodes.get(0), Ndash.get(0), new TextEditGroup("Transformation Language"));
 				}
 			}
@@ -171,7 +180,7 @@ public class SearchAlgorithmNew {
 			IASTNode declarationNdash = getDeclaration(Ndash);
 
 			try {
-				if (!collectReferences) {
+				if (performRewrite) {
 					astRewrite.replace(definitionNr, definitionNdash, new TextEditGroup("Transformation Language"));
 					astRewrite.replace(declarationNr, declarationNdash, new TextEditGroup("Transformation Language"));
 				}
@@ -254,9 +263,6 @@ public class SearchAlgorithmNew {
 			String oldName = getVarNameFromDeclaration((IASTDeclaration) declaration);
 			String newName = getVarNameFromDeclaration((IASTDeclaration) declarationToReplace);
 			migrations.varMigrations.put(Pair.of(oldName, newName), typeMigration);
-			System.out.println("Putting in migration");
-			System.out.println(migrations);
-
 		}
 		return returnNode;
 	}
