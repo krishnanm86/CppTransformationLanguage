@@ -436,14 +436,13 @@ public class SearchAlgorithmNew {
 	public static void search(IASTNode selectedNode, IASTTranslationUnit ast, ASTRewrite astRewrite) throws Exception {
 
 		init(ast, astRewrite, new Migrations());
-		AppliedRules = new HashMap<List<IASTNode>, TTlRule>();
 		/* Collect reference updates for automatic renaming */
-		Global(selectedNode);
+		/*Global(selectedNode);
 		System.out.println("First pass done");
 		System.out.println(migrations);
 
 		System.out.println("Beginning Search and data migration.....");
-		init(ast, astRewrite, migrations);
+		init(ast, astRewrite, migrations);*/
 		performRewrite = true;
 		Global(selectedNode);
 	}

@@ -54,17 +54,7 @@ public class TransformationUtils {
 
 	public static void addUses(ArrayList<IASTNode> uses, IASTName name) {
 		IASTNode use = name;
-		if (use.getParent() != null && !(use.getParent() instanceof ITranslationUnit)
-				&& !(use.getParent() instanceof IASTStatement)) {
-			uses.add(use.getParent());
-			use = use.getParent();
-		}
-		if (use.getParent() != null && !(use.getParent() instanceof ITranslationUnit)
-				&& !(use.getParent() instanceof IASTStatement)) {
-			uses.add(use.getParent());
-			use = use.getParent();
-		}
-		if (use.getParent() != null && !(use.getParent() instanceof ITranslationUnit)
+		while (use.getParent() != null && !(use.getParent() instanceof ITranslationUnit)
 				&& !(use.getParent() instanceof IASTStatement)) {
 			uses.add(use.getParent());
 			use = use.getParent();
