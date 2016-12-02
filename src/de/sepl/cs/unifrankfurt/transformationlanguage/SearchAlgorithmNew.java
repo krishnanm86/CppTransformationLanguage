@@ -464,8 +464,8 @@ public class SearchAlgorithmNew {
 
 	private static void setRules() throws Exception {
 		// rules = VCSpecs.populateRules();
-		// rules = GMPSpecsNew.populateRules3();
-		rules = AOSSOASpecs.populateRules();
+		rules = GMPSpecsNew.populateRules();
+		// rules = AOSSOASpecs.populateRules();
 		// rules = LoopTilingSpecs.populateRules();
 	}
 }

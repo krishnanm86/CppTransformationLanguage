@@ -7,8 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import org.eclipse.cdt.core.dom.ast.IASTNode;
-
 import de.sepl.cs.unifrankfurt.transformationlanguage.TTlExpression.NodeType;
 
 public class AOSSOASpecs {
