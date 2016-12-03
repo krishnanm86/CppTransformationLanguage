@@ -98,6 +98,7 @@ public class SearchAlgorithmNew {
 					for (IASTNode use : TransformationUtils.getUses(objectref, ast)) {
 						dependencies.add(use);
 					}
+					dependencies.add(TransformationUtils.getDefns(objectref));
 					visitor.visitedNames.add(objectref);
 				}
 			}
@@ -437,12 +438,13 @@ public class SearchAlgorithmNew {
 
 		init(ast, astRewrite, new Migrations());
 		/* Collect reference updates for automatic renaming */
-		/*Global(selectedNode);
-		System.out.println("First pass done");
-		System.out.println(migrations);
-
-		System.out.println("Beginning Search and data migration.....");
-		init(ast, astRewrite, migrations);*/
+		/*
+		 * Global(selectedNode); System.out.println("First pass done");
+		 * System.out.println(migrations);
+		 * 
+		 * System.out.println("Beginning Search and data migration.....");
+		 * init(ast, astRewrite, migrations);
+		 */
 		performRewrite = true;
 		Global(selectedNode);
 	}

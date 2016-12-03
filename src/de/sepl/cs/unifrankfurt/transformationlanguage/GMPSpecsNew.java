@@ -13,19 +13,20 @@ public class GMPSpecsNew {
 
 		addNoTransformRules(rules);
 
-		TTlExpression rulePattern6 = new TTlExpression("__ttlp__ = __ttlp2__ + __ttlp3__;", NodeType.Statement);
-		TTlExpression ruleConstructExpression6 = new TTlExpression("mpz_add(__ttlp__,__ttlp2__,__ttlp3__);",
-				NodeType.Statement);
+		TTlExpression rulePattern0_2 = new TTlExpression("int __ttlp__", NodeType.Expression);
+		TTlExpression ruleConstructExpression0_2 = new TTlExpression("mpz_t __ttlp__", NodeType.Expression);
+		rules.add(new TTlRule(rulePattern0_2, ruleConstructExpression0_2, NodeType.Expression,
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
 
-		rules.add(new TTlRule(rulePattern6, ruleConstructExpression6, NodeType.Statement, new HashMap<Scope, String>(),
-				new HashMap<Tag, String>()));
+		TTlExpression rulePattern0_3 = new TTlExpression("r_big_polynomial __ttlp__", NodeType.Expression);
+		TTlExpression ruleConstructExpression0_3 = new TTlExpression("r_big_polynomial __ttlp__", NodeType.Expression);
+		rules.add(new TTlRule(rulePattern0_3, ruleConstructExpression0_3, NodeType.Expression,
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
 
-		TTlExpression rulePattern7 = new TTlExpression("__ttlp__ = __ttlp2__ * __ttlp3__;", NodeType.Statement);
-		TTlExpression ruleConstructExpression7 = new TTlExpression("mpz_mul(__ttlp__,__ttlp2__,__ttlp3__);",
-				NodeType.Statement);
-
-		rules.add(new TTlRule(rulePattern7, ruleConstructExpression7, NodeType.Statement, new HashMap<Scope, String>(),
-				new HashMap<Tag, String>()));
+		TTlExpression rulePattern0_4 = new TTlExpression("int* __ttlp__", NodeType.Expression);
+		TTlExpression ruleConstructExpression0_4 = new TTlExpression("mpz_t* __ttlp__", NodeType.Expression);
+		rules.add(new TTlRule(rulePattern0_4, ruleConstructExpression0_4, NodeType.Expression,
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
 
 		TTlExpression rulePattern1 = new TTlExpression("int* __ttlname__ = (int*) malloc(sizeof(int) * __ttlp__);",
 				NodeType.Statement);
@@ -48,9 +49,21 @@ public class GMPSpecsNew {
 		rules.add(new TTlRule(rulePattern1_2, ruleConstructExpression1_2, NodeType.Statement,
 				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
 
-		TTlExpression rulePattern0 = new TTlExpression("int* __ttlname__", NodeType.Expression);
-		TTlExpression ruleConstructExpression0 = new TTlExpression("mpz_t* __ttlname__", NodeType.Expression);
-		rules.add(new TTlRule(rulePattern0, ruleConstructExpression0, NodeType.Expression, new HashMap<Scope, String>(),
+		TTlExpression rulePattern0_5 = new TTlExpression("r_big_polynomial* __ttlp__", NodeType.Expression);
+		TTlExpression ruleConstructExpression0_5 = new TTlExpression("r_big_polynomial* __ttlp__", NodeType.Expression);
+		rules.add(new TTlRule(rulePattern0_5, ruleConstructExpression0_5, NodeType.Expression,
+				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
+
+		TTlExpression rulePattern6 = new TTlExpression("__ttlp__ = __ttlp2__ + __ttlp3__;", NodeType.Statement);
+		TTlExpression ruleConstructExpression6 = new TTlExpression("mpz_add(__ttlp__,__ttlp2__,__ttlp3__);",
+				NodeType.Statement);
+		rules.add(new TTlRule(rulePattern6, ruleConstructExpression6, NodeType.Statement, new HashMap<Scope, String>(),
+				new HashMap<Tag, String>()));
+
+		TTlExpression rulePattern7 = new TTlExpression("__ttlp__ = __ttlp2__ * __ttlp3__;", NodeType.Statement);
+		TTlExpression ruleConstructExpression7 = new TTlExpression("mpz_mul(__ttlp__,__ttlp2__,__ttlp3__);",
+				NodeType.Statement);
+		rules.add(new TTlRule(rulePattern7, ruleConstructExpression7, NodeType.Statement, new HashMap<Scope, String>(),
 				new HashMap<Tag, String>()));
 
 		TTlExpression rulePattern0_1 = new TTlExpression("int __ttlname__;", NodeType.Statement);
