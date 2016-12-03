@@ -1,7 +1,6 @@
 package de.sepl.cs.unifrankfurt.transformationlanguage;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Set;
 
@@ -110,30 +109,6 @@ public class GMPSpecsNew {
 		TTlExpression ruleConstructExpression2 = new TTlExpression("j __ttlop__ __ttlp2__", NodeType.Expression);
 		rules.add(new TTlRule(rulePattern2, ruleConstructExpression2, NodeType.Expression, new HashMap<Scope, String>(),
 				new HashMap<Tag, String>()));
-		/*
-		 * TTlExpression rulePattern3 = new TTlExpression("int i;",
-		 * NodeType.Statement); TTlExpression ruleConstructExpression3 = new
-		 * TTlExpression("int i;", NodeType.Statement); rules.add(new
-		 * TTlRule(rulePattern3, ruleConstructExpression3, NodeType.Statement,
-		 * new HashMap<Scope, String>(), new HashMap<Tag, String>()));
-		 * TTlExpression rulePattern4 = new TTlExpression(
-		 * "j __ttlop__ __ttlp2__", NodeType.Statement); TTlExpression
-		 * ruleConstructExpression4 = new TTlExpression("j __ttlop__ __ttlp2__",
-		 * NodeType.Statement); rules.add(new TTlRule(rulePattern4,
-		 * ruleConstructExpression4, NodeType.Statement, new HashMap<Scope,
-		 * String>(), new HashMap<Tag, String>())); TTlExpression rulePattern5 =
-		 * new TTlExpression("j __ttlop__ __ttlp2__", NodeType.Statement);
-		 * TTlExpression ruleConstructExpression5 = new TTlExpression(
-		 * "j __ttlop__ __ttlp2__", NodeType.Statement); rules.add(new
-		 * TTlRule(rulePattern5, ruleConstructExpression5, NodeType.Statement,
-		 * new HashMap<Scope, String>(), new HashMap<Tag, String>()));
-		 * TTlExpression rulePattern6 = new TTlExpression(
-		 * "j __ttlop__ __ttlp2__", NodeType.Statement); TTlExpression
-		 * ruleConstructExpression6 = new TTlExpression("j __ttlop__ __ttlp2__",
-		 * NodeType.Statement); rules.add(new TTlRule(rulePattern6,
-		 * ruleConstructExpression6, NodeType.Statement, new HashMap<Scope,
-		 * String>(), new HashMap<Tag, String>()));
-		 */
 
 	}
 }

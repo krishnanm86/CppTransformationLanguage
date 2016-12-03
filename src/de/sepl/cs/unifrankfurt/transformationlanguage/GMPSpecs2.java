@@ -126,7 +126,7 @@ public class GMPSpecs2 {
 		TTlExpression rulePattern31 = new TTlExpression("(__ttlp__ - -__ttlp2__);", NodeType.Statement);
 		TTlExpression ruleConstructExpression31 = new TTlExpression("mpz_cmp_si(__ttlp__,__ttlp2__);",
 				NodeType.Statement);
-		rules.add(new TTlRule(rulePattern30, ruleConstructExpression30, NodeType.Statement,
+		rules.add(new TTlRule(rulePattern31, ruleConstructExpression31, NodeType.Statement,
 				new HashMap<Scope, String>(), new HashMap<Tag, String>()));
 
 		// 29

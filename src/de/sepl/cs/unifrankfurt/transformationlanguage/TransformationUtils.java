@@ -3,7 +3,6 @@ package de.sepl.cs.unifrankfurt.transformationlanguage;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.cdt.core.dom.ast.IASTFunctionDefinition;
 import org.eclipse.cdt.core.dom.ast.IASTName;
 import org.eclipse.cdt.core.dom.ast.IASTNode;
 import org.eclipse.cdt.core.dom.ast.IASTStatement;
@@ -16,7 +15,6 @@ import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPClassType;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPParameter;
 import org.eclipse.cdt.internal.core.dom.parser.cpp.CPPVariable;
 import org.eclipse.cdt.internal.core.pdom.dom.cpp.IPDOMCPPClassType;
-import org.eclipse.cdt.internal.core.pdom.dom.cpp.PDOMCPPClassTemplate;
 
 @SuppressWarnings("restriction")
 public class TransformationUtils {
